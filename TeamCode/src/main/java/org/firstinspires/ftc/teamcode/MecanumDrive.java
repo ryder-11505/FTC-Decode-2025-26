@@ -35,7 +35,6 @@ import com.acmerobotics.roadrunner.ftc.LynxFirmware;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -43,9 +42,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.teamcode.galahlib.StateLoggable;
-import org.firstinspires.ftc.teamcode.localization.RollbackLocalizer;
-import org.firstinspires.ftc.teamcode.localization.ThreeDeadWheelLocalizer;
+import org.firstinspires.ftc.teamcode.localization.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.messages.PoseMessage;
@@ -110,8 +109,8 @@ public final class MecanumDrive implements StateLoggable {
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
     public final VoltageSensor voltageSensor;
     public final LazyImu lazyImu;
-    public final RollbackLocalizer localizer;
-    public final ThreeDeadWheelLocalizer deadWheelLocalizer;
+
+    public final PinpointLocalizer localizer;
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
@@ -145,9 +144,8 @@ public final class MecanumDrive implements StateLoggable {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        deadWheelLocalizer = new ThreeDeadWheelLocalizer(hardwareMap, PARAMS.inPerTick);
-        localizer = new RollbackLocalizer(deadWheelLocalizer);
-        this.localizer.setCurrentPose(pose);
+        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, );
+        this.localizer.setPose(pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -182,25 +180,24 @@ public final class MecanumDrive implements StateLoggable {
     public PoseVelocity2d update(TelemetryPacket p) {
         PoseVelocity2d velocity = updatePoseEstimate();
 
-        localizer.drawPoseHistory(p.fieldOverlay());
 
         Canvas c = p.fieldOverlay();
         c.setStroke("#B53FA8");
 
         c.setStroke("#3F89B5");
-        Drawing.drawRobot(c, localizer.currentPose);
+        Drawing.drawRobot(c, localizer.getPose());
 
-        p.put("x", localizer.currentPose.position.x);
-        p.put("y", localizer.currentPose.position.y);
-        p.put("heading (deg)", Math.toDegrees(localizer.currentPose.heading.toDouble()));
+        p.put("x", localizer.getPose().position.x);
+        p.put("y", localizer.getPose().position.y);
+        p.put("heading (deg)", Math.toDegrees(localizer.getPose().heading.toDouble()));
 
         return velocity;
     }
 
     public PoseVelocity2d updatePoseEstimate() {
-        Twist2dDual<Time> twist = localizer.update();
+        localizer.update();
 
-        return twist.velocity().value();
+        return  localizer.update();
     }
 
     public TrajectoryActionBuilder actionBuilder(Pose2d beginPose) {
@@ -286,7 +283,7 @@ public final class MecanumDrive implements StateLoggable {
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                     PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
             )
-                    .compute(txWorldTarget, localizer.currentPose, robotVelRobot);
+                    .compute(txWorldTarget, localizer.getPose(), robotVelRobot);
             driveCommandWriter.write(new DriveCommandMessage(command));
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(command);
@@ -310,7 +307,7 @@ public final class MecanumDrive implements StateLoggable {
             // only draw when active; only one drive action should be active at a time
             Canvas c = p.fieldOverlay();
 
-            Pose2d error = txWorldTarget.value().minusExp(localizer.currentPose);
+            Pose2d error = txWorldTarget.value().minusExp(localizer.getPose());
             p.put("xError", error.position.x);
             p.put("yError", error.position.y);
             p.put("headingError (deg)", Math.toDegrees(error.heading.toDouble()));
@@ -370,7 +367,7 @@ public final class MecanumDrive implements StateLoggable {
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                     PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
             )
-                    .compute(txWorldTarget, localizer.currentPose, robotVelRobot);
+                    .compute(txWorldTarget, localizer.getPose(), robotVelRobot);
             driveCommandWriter.write(new DriveCommandMessage(command));
 
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(command);

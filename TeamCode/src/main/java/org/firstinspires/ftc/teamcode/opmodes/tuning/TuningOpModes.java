@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.tuning;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.MotorFeedforward;
@@ -9,22 +11,34 @@ import com.acmerobotics.roadrunner.ftc.DeadWheelDirectionDebugger;
 import com.acmerobotics.roadrunner.ftc.DriveType;
 import com.acmerobotics.roadrunner.ftc.DriveView;
 import com.acmerobotics.roadrunner.ftc.DriveViewFactory;
-import com.acmerobotics.roadrunner.ftc.Encoder;
+import com.acmerobotics.roadrunner.ftc.EncoderGroup;
+import com.acmerobotics.roadrunner.ftc.EncoderRef;
 import com.acmerobotics.roadrunner.ftc.ForwardPushTest;
 import com.acmerobotics.roadrunner.ftc.ForwardRampLogger;
 import com.acmerobotics.roadrunner.ftc.LateralPushTest;
 import com.acmerobotics.roadrunner.ftc.LateralRampLogger;
+import com.acmerobotics.roadrunner.ftc.LazyImu;
+import com.acmerobotics.roadrunner.ftc.LynxQuadratureEncoderGroup;
 import com.acmerobotics.roadrunner.ftc.ManualFeedforwardTuner;
 import com.acmerobotics.roadrunner.ftc.MecanumMotorDirectionDebugger;
+import com.acmerobotics.roadrunner.ftc.OTOSAngularScalarTuner;
+import com.acmerobotics.roadrunner.ftc.OTOSHeadingOffsetTuner;
+import com.acmerobotics.roadrunner.ftc.OTOSLinearScalarTuner;
+import com.acmerobotics.roadrunner.ftc.OTOSPositionOffsetTuner;
+import com.acmerobotics.roadrunner.ftc.PinpointEncoderGroup;
+import com.acmerobotics.roadrunner.ftc.PinpointIMU;
+import com.acmerobotics.roadrunner.ftc.PinpointView;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.localization.ThreeDeadWheelLocalizer;
-import org.firstinspires.ftc.teamcode.staticData.Logging;
+import org.firstinspires.ftc.teamcode.localization.PinpointLocalizer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,10 +49,9 @@ public final class TuningOpModes {
     public static final Class<?> DRIVE_CLASS = MecanumDrive.class;
 
     public static final String GROUP = "quickstart";
-    public static final boolean DISABLED = !Logging.DEBUG;
+    public static final boolean DISABLED = false;
 
-    private TuningOpModes() {
-    }
+    private TuningOpModes() {}
 
     private static OpModeMeta metaForClass(Class<? extends OpMode> cls) {
         return new OpModeMeta.Builder()
@@ -46,6 +59,61 @@ public final class TuningOpModes {
                 .setGroup(GROUP)
                 .setFlavor(OpModeMeta.Flavor.TELEOP)
                 .build();
+    }
+
+    private static PinpointView makePinpointView(PinpointLocalizer pl) {
+        return new PinpointView() {
+            GoBildaPinpointDriver.EncoderDirection parDirection = pl.initialParDirection;
+            GoBildaPinpointDriver.EncoderDirection perpDirection = pl.initialPerpDirection;
+
+            @Override
+            public void update() {
+                pl.driver.update();
+            }
+
+            @Override
+            public int getParEncoderPosition() {
+                return pl.driver.getEncoderX();
+            }
+
+            @Override
+            public int getPerpEncoderPosition() {
+                return pl.driver.getEncoderY();
+            }
+
+            @Override
+            public float getHeadingVelocity(UnnormalizedAngleUnit unit) {
+                return (float) pl.driver.getHeadingVelocity(unit);
+            }
+
+            @Override
+            public void setParDirection(@NonNull DcMotorSimple.Direction direction) {
+                parDirection = direction == DcMotorSimple.Direction.FORWARD ?
+                        GoBildaPinpointDriver.EncoderDirection.FORWARD :
+                        GoBildaPinpointDriver.EncoderDirection.REVERSED;
+                pl.driver.setEncoderDirections(parDirection, perpDirection);
+            }
+
+            @Override
+            public DcMotorSimple.Direction getParDirection() {
+                return parDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD ?
+                        DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
+            }
+
+            @Override
+            public void setPerpDirection(@NonNull DcMotorSimple.Direction direction) {
+                perpDirection = direction == DcMotorSimple.Direction.FORWARD ?
+                        GoBildaPinpointDriver.EncoderDirection.FORWARD :
+                        GoBildaPinpointDriver.EncoderDirection.REVERSED;
+                pl.driver.setEncoderDirections(parDirection, perpDirection);
+            }
+
+            @Override
+            public DcMotorSimple.Direction getPerpDirection() {
+                return perpDirection == GoBildaPinpointDriver.EncoderDirection.FORWARD ?
+                        DcMotorSimple.Direction.FORWARD : DcMotorSimple.Direction.REVERSE;
+            }
+        };
     }
 
     @OpModeRegistrar
@@ -56,14 +124,39 @@ public final class TuningOpModes {
         if (DRIVE_CLASS.equals(MecanumDrive.class)) {
             dvf = hardwareMap -> {
                 MecanumDrive md = new MecanumDrive(hardwareMap, new Pose2d(0, 0, 0));
+                LazyImu lazyImu = md.lazyImu;
 
-                List<Encoder> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
-                List<Encoder> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
-
-                ThreeDeadWheelLocalizer dl = md.deadWheelLocalizer;
-                parEncs.add(dl.par0);
-                parEncs.add(dl.par1);
-                perpEncs.add(dl.perp);
+                List<EncoderGroup> encoderGroups = new ArrayList<>();
+                List<EncoderRef> leftEncs = new ArrayList<>(), rightEncs = new ArrayList<>();
+                List<EncoderRef> parEncs = new ArrayList<>(), perpEncs = new ArrayList<>();
+                if (md.localizer instanceof MecanumDrive.DriveLocalizer) {
+                    MecanumDrive.DriveLocalizer dl = (MecanumDrive.DriveLocalizer) md.localizer;
+                    encoderGroups.add(new LynxQuadratureEncoderGroup(
+                            hardwareMap.getAll(LynxModule.class),
+                            Arrays.asList(dl.leftFront, dl.leftBack, dl.rightFront, dl.rightBack)
+                    ));
+                    leftEncs.add(new EncoderRef(0, 0));
+                    leftEncs.add(new EncoderRef(0, 1));
+                    rightEncs.add(new EncoderRef(0, 2));
+                    rightEncs.add(new EncoderRef(0, 3));
+                } else if (md.localizer instanceof ThreeDeadWheelLocalizer) {
+                    ThreeDeadWheelLocalizer dl = (ThreeDeadWheelLocalizer) md.localizer;
+                    encoderGroups.add(new LynxQuadratureEncoderGroup(
+                            hardwareMap.getAll(LynxModule.class),
+                            Arrays.asList(dl.par0, dl.par1, dl.perp)
+                    ));
+                    parEncs.add(new EncoderRef(0, 0));
+                    parEncs.add(new EncoderRef(0, 1));
+                    perpEncs.add(new EncoderRef(0, 2));
+                }  else if (md.localizer instanceof PinpointLocalizer) {
+                    PinpointView pv = makePinpointView((PinpointLocalizer) md.localizer);
+                    encoderGroups.add(new PinpointEncoderGroup(pv));
+                    parEncs.add(new EncoderRef(0, 0));
+                    perpEncs.add(new EncoderRef(0, 1));
+                    lazyImu = new PinpointIMU(pv);
+                } else {
+                    throw new RuntimeException("unknown localizer: " + md.localizer.getClass().getName());
+                }
 
                 return new DriveView(
                         DriveType.MECANUM,
@@ -71,7 +164,7 @@ public final class TuningOpModes {
                         MecanumDrive.PARAMS.maxWheelVel,
                         MecanumDrive.PARAMS.minProfileAccel,
                         MecanumDrive.PARAMS.maxProfileAccel,
-                        hardwareMap.getAll(LynxModule.class),
+                        encoderGroups,
                         Arrays.asList(
                                 md.leftFront,
                                 md.leftBack
@@ -84,14 +177,15 @@ public final class TuningOpModes {
                         rightEncs,
                         parEncs,
                         perpEncs,
-                        md.lazyImu,
+                        lazyImu,
                         md.voltageSensor,
                         () -> new MotorFeedforward(MecanumDrive.PARAMS.kS,
                                 MecanumDrive.PARAMS.kV / MecanumDrive.PARAMS.inPerTick,
-                                MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick)
+                                MecanumDrive.PARAMS.kA / MecanumDrive.PARAMS.inPerTick),
+                        0
                 );
             };
-        } else {
+        }  else {
             throw new RuntimeException();
         }
 
@@ -107,6 +201,11 @@ public final class TuningOpModes {
         manager.register(metaForClass(ManualFeedbackTuner.class), ManualFeedbackTuner.class);
         manager.register(metaForClass(SplineTest.class), SplineTest.class);
         manager.register(metaForClass(LocalizationTest.class), LocalizationTest.class);
+
+        manager.register(metaForClass(OTOSAngularScalarTuner.class), new OTOSAngularScalarTuner(dvf));
+        manager.register(metaForClass(OTOSLinearScalarTuner.class), new OTOSLinearScalarTuner(dvf));
+        manager.register(metaForClass(OTOSHeadingOffsetTuner.class), new OTOSHeadingOffsetTuner(dvf));
+        manager.register(metaForClass(OTOSPositionOffsetTuner.class), new OTOSPositionOffsetTuner(dvf));
 
         FtcDashboard.getInstance().withConfigRoot(configRoot -> {
             for (Class<?> c : Arrays.asList(
