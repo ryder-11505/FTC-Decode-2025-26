@@ -44,6 +44,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 import org.firstinspires.ftc.teamcode.galahlib.StateLoggable;
+import org.firstinspires.ftc.teamcode.localization.Localizer;
 import org.firstinspires.ftc.teamcode.localization.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.messages.MecanumCommandMessage;
@@ -61,9 +62,9 @@ public final class MecanumDrive implements StateLoggable {
         // TODO: fill in these values based on
         //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+                RevHubOrientationOnRobot.LogoFacingDirection.UP;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.UP;
+                RevHubOrientationOnRobot.UsbFacingDirection.BACKWARD;
 
         // drive model parameters
         public double inPerTick = 0.0005312812;
@@ -144,7 +145,7 @@ public final class MecanumDrive implements StateLoggable {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, );
+        localizer = new PinpointLocalizer(hardwareMap, PARAMS.inPerTick, pose);
         this.localizer.setPose(pose);
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
