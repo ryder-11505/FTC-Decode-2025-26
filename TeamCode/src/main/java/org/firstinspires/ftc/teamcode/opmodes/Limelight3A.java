@@ -1,9 +1,8 @@
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -15,14 +14,14 @@ import java.util.List;
 
 @TeleOp(name = "Sensor: Limelight3A", group = "Sensor")
 @Disabled
-public class SensorLimelight3A extends LinearOpMode {
+public class Limelight3A extends LinearOpMode {
 
-    private Limelight3A limelight;
+    private com.qualcomm.hardware.limelightvision.Limelight3A limelight;
 
     @Override
     public void runOpMode() throws InterruptedException
     {
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight = hardwareMap.get(com.qualcomm.hardware.limelightvision.Limelight3A.class, "limelight");
 
         telemetry.setMsTransmissionInterval(11);
 
@@ -56,7 +55,7 @@ public class SensorLimelight3A extends LinearOpMode {
                 telemetry.addData("LL Latency", captureLatency + targetingLatency);
                 telemetry.addData("Parse Latency", parseLatency);
                 telemetry.addData("PythonOutput", java.util.Arrays.toString(result.getPythonOutput()));
-                
+
                 if (result.isValid()) {
                     telemetry.addData("tx", result.getTx());
                     telemetry.addData("txnc", result.getTxNC());
@@ -65,35 +64,24 @@ public class SensorLimelight3A extends LinearOpMode {
 
                     telemetry.addData("Botpose", botpose.toString());
 
-                    // Access barcode results
-                    List<LLResultTypes.BarcodeResult> barcodeResults = result.getBarcodeResults();
-                    for (LLResultTypes.BarcodeResult br : barcodeResults) {
-                        telemetry.addData("Barcode", "Data: %s", br.getData());
-                    }
-
-                    // Access classifier results
-                    List<LLResultTypes.ClassifierResult> classifierResults = result.getClassifierResults();
-                    for (LLResultTypes.ClassifierResult cr : classifierResults) {
-                        telemetry.addData("Classifier", "Class: %s, Confidence: %.2f", cr.getClassName(), cr.getConfidence());
-                    }
-
-                    // Access detector results
-                    List<LLResultTypes.DetectorResult> detectorResults = result.getDetectorResults();
-                    for (LLResultTypes.DetectorResult dr : detectorResults) {
-                        telemetry.addData("Detector", "Class: %s, Area: %.2f", dr.getClassName(), dr.getTargetArea());
-                    }
 
                     // Access fiducial results
                     List<LLResultTypes.FiducialResult> fiducialResults = result.getFiducialResults();
                     for (LLResultTypes.FiducialResult fr : fiducialResults) {
+                        int id = fr.getFiducialId(); // The ID number of the fiducial
+                        double x = fr.getTargetXDegrees(); // Where it is (left-right)
+                        double y = fr.getTargetYDegrees(); // Where it is (up-down)
+                        double StrafeDistance_3D = fr.getRobotPoseTargetSpace().getPosition().y;
                         telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(),fr.getTargetXDegrees(), fr.getTargetYDegrees());
                     }
 
-                    // Access color results
-                    List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
-                    for (LLResultTypes.ColorResult cr : colorResults) {
-                        telemetry.addData("Color", "X: %.2f, Y: %.2f", cr.getTargetXDegrees(), cr.getTargetYDegrees());
-                    }
+
+//                    fiducial.getRobotPoseTargetSpace(); // Robot pose relative it the AprilTag Coordinate System (Most Useful)
+//                    fiducial.getCameraPoseTargetSpace(); // Camera pose relative to the AprilTag (useful)
+//                    fiducial.getRobotPoseFieldSpace(); // Robot pose in the field coordinate system based on this tag alone (useful)
+//                    fiducial.getTargetPoseCameraSpace(); // AprilTag pose in the camera's coordinate system (not very useful)
+//                    fiducial.getTargetPoseRobotSpace(); // AprilTag pose in the robot's coordinate system (not very useful)
+
                 }
             } else {
                 telemetry.addData("Limelight", "No data available");
@@ -104,3 +92,4 @@ public class SensorLimelight3A extends LinearOpMode {
         limelight.stop();
     }
 }
+
