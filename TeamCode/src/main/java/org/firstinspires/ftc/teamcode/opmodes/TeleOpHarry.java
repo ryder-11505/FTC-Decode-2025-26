@@ -29,7 +29,6 @@ import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
-import org.firstinspires.ftc.teamcode.subsystems.StaticLights;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +44,8 @@ public class TeleOpHarry extends LinearOpMode {
     @Override
     public void runOpMode() {
         MecanumDrive driveBase = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
+        Intake intake = new Intake(hardwareMap);
+        Outtake outtake = new Outtake(hardwareMap);
 
 
         Button fieldMode = new Button();
@@ -110,31 +111,64 @@ public class TeleOpHarry extends LinearOpMode {
             PoseStorage.shouldHallucinate = (PoseStorage.splitControls ? gamepad2 : gamepad1).guide;
 
 
-            if (PoseStorage.splitControls) {
-                slowMode.update(gamepad1.left_bumper);
-                fieldMode.update(gamepad1.x);
-
-                if (gamepad2.dpad_right) {
-                    PoseStorage.isRedAlliance = true;
-                } else if (gamepad2.dpad_left) {
-                    PoseStorage.isRedAlliance = false;
-                }
-            } else {
-                slowMode.update(gamepad1.y);
-                fieldMode.update(gamepad1.x);
-
-                if (gamepad1.dpad_right) {
-                    PoseStorage.isRedAlliance = true;
-                } else if (gamepad1.dpad_left) {
-                    PoseStorage.isRedAlliance = false;
-                }
-            }
+//            if (PoseStorage.splitControls) {
+//                slowMode.update(gamepad1.left_bumper);
+//                fieldMode.update(gamepad1.x);
+//
+//                if (gamepad2.dpad_right) {
+//                    PoseStorage.isRedAlliance = true;
+//                } else if (gamepad2.dpad_left) {
+//                    PoseStorage.isRedAlliance = false;
+//                }
+//            } else {
+//                slowMode.update(gamepad1.y);
+//                fieldMode.update(gamepad1.x);
+//
+//                if (gamepad1.dpad_right) {
+//                    PoseStorage.isRedAlliance = true;
+//                } else if (gamepad1.dpad_left) {
+//                    PoseStorage.isRedAlliance = false;
+//                }
+//            }
 
             driveBase.update(p);
 
 
+            if (gamepad1.xWasPressed()){
+                outtake.shoot();
+            }
 
-            Pose2d poseEstimate = driveBase.localizer.currentPose;
+            if (gamepad1.xWasReleased()){
+                outtake.stopShoot();
+            }
+
+            if (gamepad1.aWasPressed()){
+                intake.intake();
+            }
+
+            if (gamepad1.aWasReleased()){
+                intake.stopIntake();
+            }
+
+            if (gamepad1.rightBumperWasPressed()){
+                intake.intake();
+            }
+
+            if (gamepad1.rightBumperWasReleased()){
+                intake.stopIntake();
+            }
+
+            if (gamepad1.bWasPressed()){
+                intake.outake();
+            }
+
+            if (gamepad1.bWasReleased()){
+                intake.stopIntake();
+            }
+
+
+
+            Pose2d poseEstimate = driveBase.localizer.getPose();
             input = input.times(slowMode.val ? SlowmodeSpeed : 1);
 
             if (fieldMode.val) {
