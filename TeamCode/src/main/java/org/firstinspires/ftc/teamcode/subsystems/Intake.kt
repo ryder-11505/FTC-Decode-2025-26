@@ -47,37 +47,37 @@ class Intake(hardwareMap: HardwareMap) : StateLoggable {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
-    fun intake(): LoggableAction {
-        var initialized = false
-        return Loggable("INTAKE_RUN", fun(p: TelemetryPacket): Boolean {
-            if (!initialized) {
-                Logging.LOG("INTAKE")
+    fun intake() {
+//        var initialized = false
+//        return Loggable("INTAKE_RUN", fun(p: TelemetryPacket): Boolean {
+//            if (!initialized) {
+//                Logging.LOG("INTAKE")
                 motor.power = speed
-                initialized = true
-            }
-
-            return false
-        })
+//                initialized = true
+//            }
+//
+//            return false
+//        })
     }
 
-    fun outake(): LoggableAction {
-        var initialized = false
-        return Loggable("OUTAKE_RUN", fun(p: TelemetryPacket): Boolean {
-            if (!initialized) {
-                Logging.LOG("OUTAKE")
+    fun outake() {
+//        var initialized = false
+//        return Loggable("OUTAKE_RUN", fun(p: TelemetryPacket): Boolean {
+//            if (!initialized) {
+//                Logging.LOG("OUTAKE")
                 motor.power = - speed
-                initialized = true
-            }
-
-            return false
-        })
+//                initialized = true
+//            }
+//
+//            return false
+//        })
     }
 
-    fun stopIntake(): LoggableAction {
-        return Loggable("STOP_INTAKE_MOTOR", InstantAction {
-            Logging.LOG("STOP_INTAKE")
+    fun stopIntake() {
+//        return Loggable("STOP_INTAKE_MOTOR", InstantAction {
+//            Logging.LOG("STOP_INTAKE")
             motor.power = 0.0
-        })
+//        })
     }
 
     override fun logState(uniqueName: String?) {

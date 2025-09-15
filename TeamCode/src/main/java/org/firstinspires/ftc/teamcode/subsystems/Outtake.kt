@@ -38,25 +38,25 @@ class Outtake(hardwareMap: HardwareMap) : StateLoggable {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
-    fun shoot(): LoggableAction {
-        var initialized = false
-        return Loggable("SHOOT_RUN", fun(p: TelemetryPacket): Boolean {
-            if (!initialized) {
-                Logging.LOG("SHOOT")
+    fun shoot() {
+//        var initialized = false
+//        return Loggable("SHOOT_RUN", fun(p: TelemetryPacket): Boolean {
+//            if (!initialized) {
+//                Logging.LOG("SHOOT")
                 motor.power = speed
-                initialized = true
-            }
-
-            return false
-        })
+//                initialized = true
+//            }
+//
+//            return false
+//        })
     }
 
 
-    fun stopShoot(): LoggableAction {
-        return Loggable("STOP_SHOOTER_MOTOR", InstantAction {
-            Logging.LOG("STOP_SHOOTER")
+    fun stopShoot() {
+//        return Loggable("STOP_SHOOTER_MOTOR", InstantAction {
+//            Logging.LOG("STOP_SHOOTER")
             motor.power = 0.0
-        })
+//        })
     }
 
     override fun logState(uniqueName: String?) {

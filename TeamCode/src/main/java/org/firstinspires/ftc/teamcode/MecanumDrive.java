@@ -32,6 +32,8 @@ import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.acmerobotics.roadrunner.ftc.LynxFirmware;
+import com.acmerobotics.roadrunner.ftc.PinpointIMU;
+import com.acmerobotics.roadrunner.ftc.PinpointView;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -39,6 +41,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -109,7 +112,7 @@ public final class MecanumDrive implements StateLoggable {
             new ProfileAccelConstraint(PARAMS.minProfileAccel, PARAMS.maxProfileAccel);
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
     public final VoltageSensor voltageSensor;
-    public final LazyImu lazyImu;
+//    public final LazyImu lazyImu;
 
     public final PinpointLocalizer localizer;
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
@@ -141,7 +144,8 @@ public final class MecanumDrive implements StateLoggable {
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        lazyImu = (LazyImu) hardwareMap.get(IMU.class, "imu");
+//        lazyImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
+//                PARAMS.logoFacingDirection, PARAMS.usbFacingDirection);
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 

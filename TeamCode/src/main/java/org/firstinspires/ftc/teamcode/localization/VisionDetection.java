@@ -29,11 +29,11 @@ public class VisionDetection {
         limelight.start();
     }
 
-    public void update(RollbackLocalizer localizer, TelemetryPacket packet) {
+    public void update(PinpointLocalizer localizer, TelemetryPacket packet) {
         iteration += 1;
 
         if (iteration % 20 == 0) {
-            limelight.updateRobotOrientation(AngleUnit.DEGREES.fromRadians(localizer.currentPose.heading.toDouble()));
+            limelight.updateRobotOrientation(AngleUnit.DEGREES.fromRadians(localizer.getPose().heading.toDouble()));
         }
 
         if (iteration % 200 == 0) {
@@ -71,15 +71,13 @@ public class VisionDetection {
                 Logging.LOG("OOB Location");
                 if (PoseStorage.isInit) {
                     limelight.updateRobotOrientation(AngleUnit.DEGREES.fromRadians(robotPose.heading.toDouble() + Math.PI));
-                    localizer.setCurrentPose(new Pose2d(0, 0, robotPose.heading.toDouble() + Math.PI));
+                    localizer.setPose(new Pose2d(0, 0, robotPose.heading.toDouble() + Math.PI));
                 }
                 return;
             }
 
             packet.fieldOverlay().setStroke("#00ffff");
             Drawing.drawRobot(packet.fieldOverlay(), robotPose);
-
-            localizer.newDelayedVisionPose(robotPose, captureLatency + targetingLatency + parseLatency + staleness);
         } else {
             Logging.LOG("(limelight) Status", "No data available");
         }

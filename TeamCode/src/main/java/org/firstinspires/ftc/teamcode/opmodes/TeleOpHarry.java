@@ -104,7 +104,7 @@ public class TeleOpHarry extends LinearOpMode {
             }
 
             Vector2d input = new Vector2d(
-                    -gamepad1.left_stick_y,
+                    gamepad1.left_stick_y,
                     -gamepad1.left_stick_x
             );
 
@@ -134,7 +134,7 @@ public class TeleOpHarry extends LinearOpMode {
             driveBase.update(p);
 
 
-            if (gamepad1.xWasPressed()){
+            if (gamepad1.x){
                 outtake.shoot();
             }
 
@@ -142,7 +142,7 @@ public class TeleOpHarry extends LinearOpMode {
                 outtake.stopShoot();
             }
 
-            if (gamepad1.aWasPressed()){
+            if (gamepad1.a){
                 intake.intake();
             }
 
@@ -150,7 +150,7 @@ public class TeleOpHarry extends LinearOpMode {
                 intake.stopIntake();
             }
 
-            if (gamepad1.rightBumperWasPressed()){
+            if (gamepad1.right_bumper){
                 intake.intake();
             }
 
@@ -158,7 +158,7 @@ public class TeleOpHarry extends LinearOpMode {
                 intake.stopIntake();
             }
 
-            if (gamepad1.bWasPressed()){
+            if (gamepad1.b){
                 intake.outake();
             }
 
