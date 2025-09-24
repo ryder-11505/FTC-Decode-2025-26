@@ -40,22 +40,22 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
         private const val gearRatio = 20.0
         private const val ticksPerRev = encoderCPR * gearRatio
         @JvmField
-        val ticksPerDegree: Double = ticksPerRev / 360.0  // ~91.0 ticks/deg
+        var ticksPerDegree: Double = ticksPerRev / 360.0  // ~91.0 ticks/deg
 
         // Mechanical limits (adjust to your turret’s safe travel)
         // Example: ±90° range
         @JvmField
-        val SPIN_MIN = -(90 * ticksPerDegree).toInt()   // ≈ -8192
+        val SPIN_MIN = -(45 * ticksPerDegree).toInt()   // ≈ -8192
         @JvmField
-        val SPIN_MAX =  (90 * ticksPerDegree).toInt()   // ≈ +8192
+        val SPIN_MAX =  (45 * ticksPerDegree).toInt()   // ≈ +8192
 
         // Tilt limits (servo normalized range)
-        const val TILT_MIN = 0.0
-        const val TILT_MAX = 1.0
-
-        @JvmField var kP_Tilt = 0.17
-        @JvmField var kI_Tilt = 0.0
-        @JvmField var kD_Tilt = 0.1
+//        const val TILT_MIN = 0.0
+//        const val TILT_MAX = 1.0
+//
+//        @JvmField var kP_Tilt = 0.17
+//        @JvmField var kI_Tilt = 0.0
+//        @JvmField var kD_Tilt = 0.1
     }
 
 
@@ -63,7 +63,7 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
 //    val tiltMotor = hardwareMap.get(DcMotorEx::class.java, "tilt")
 //    val spinServo = hardwareMap.get(Servo::class.java, "spin") // servo
 //    val spinOutput = hardwareMap.get(AnalogInput::class.java, "spinOutput")
-    val tiltServo = hardwareMap.get(Servo::class.java, "tilt") // servo
+//    val tiltServo = hardwareMap.get(Servo::class.java, "tilt") // servo
 //    val tiltOutput = hardwareMap.get(AnalogInput::class.java, "tiltOutput")
 
 //
@@ -71,7 +71,7 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
     val spinCurrentPosition get() = spinMotor.currentPosition
 //    val tiltCurrentPosition get() = tiltMotor.currentPosition
 //    val spinCurrentPosition get() = spinTarget
-    val tiltCurrentPosition get() = tiltTarget // servo doesn't have encoder
+//    val tiltCurrentPosition get() = tiltTarget // servo doesn't have encoder
 
 //    // AnalogInput gives volts in range ~0-5 (5V)
 //    val tiltCurrentPosition: Double
@@ -83,10 +83,10 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
 
 //    private var spinTarget = 0.5  // normalized target
 //    private var spinIntegral = 0.0
-    private var tiltTarget = 0.5  // normalized target
-    private var tiltIntegral = 0.0
-    private var lastError = 0.0
-    private val timer = ElapsedTime()
+//    private var tiltTarget = 0.5  // normalized target
+//    private var tiltIntegral = 0.0
+//    private var lastError = 0.0
+//    private val timer = ElapsedTime()
 
 
 //    private fun initMotor() {
@@ -124,7 +124,7 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
         spinMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         // tiltTarget should already be in 0.0..1.0 range
 //        spinServo.position = spinTarget.coerceIn(0.0, 1.0)
-        tiltServo.position = tiltTarget.coerceIn(TILT_MIN, TILT_MAX)
+//        tiltServo.position = tiltTarget.coerceIn(TILT_MIN, TILT_MAX)
     }
 
     private val spinActionWriter = DownsampledWriter("SPIN_ACTION", 50_000_000)
@@ -134,14 +134,14 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
 
 
 
-    // --- PID Correction ---
-    // Apply proportional correction so the turret "tracks" the center
-    fun aimTiltFromTyPID(ty: Double) {
-        val error = ty / 20.0  // scale FOV ±20° -> ±1.0
-        val correction = kP_Tilt * error
-        val newTarget = (tiltTarget + correction).coerceIn(TILT_MIN, TILT_MAX)
-        setTiltTargetNormalized(newTarget)
-    }
+//    // --- PID Correction ---
+//    // Apply proportional correction so the turret "tracks" the center
+//    fun aimTiltFromTyPID(ty: Double) {
+//        val error = ty / 20.0  // scale FOV ±20° -> ±1.0
+//        val correction = kP_Tilt * error
+//        val newTarget = (tiltTarget + correction).coerceIn(TILT_MIN, TILT_MAX)
+//        setTiltTargetNormalized(newTarget)
+//    }
 
     fun setSpinTarget(target: Double) {
         // clamp to safe range and set motor target
@@ -163,15 +163,15 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
 //        tiltServo.position = tiltTarget
 //    }
 
-    // Accept a *normalized* tilt position in [0.0, 1.0]
-    fun setTiltTargetNormalized(normalized: Double) {
-        val safe = normalized.coerceIn(TILT_MIN.toDouble(), TILT_MAX.toDouble())
-        if (safe != normalized) {
-            Logging.LOG("TURRET", "Requested tilt normalized $normalized out of range; clamped to $safe")
-        }
-        tiltTarget = safe
-        tiltServo.position = tiltTarget
-    }
+//    // Accept a *normalized* tilt position in [0.0, 1.0]
+//    fun setTiltTargetNormalized(normalized: Double) {
+//        val safe = normalized.coerceIn(TILT_MIN.toDouble(), TILT_MAX.toDouble())
+//        if (safe != normalized) {
+//            Logging.LOG("TURRET", "Requested tilt normalized $normalized out of range; clamped to $safe")
+//        }
+//        tiltTarget = safe
+//        tiltServo.position = tiltTarget
+//    }
 
 //
 
@@ -355,25 +355,25 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
 //        }
 //    }
 
-    fun holdVariableTiltPosition(positionTiltProvider: DoubleProvider?): LoggableAction {
-        return object : LoggableAction {
-            override val name: String
-                get() = "$lastName HOLD_TILT_SERVO"
-            var initialized = false
-
-            override fun run(p: TelemetryPacket): Boolean {
-                if (!initialized) {
-                    initialized = true
-                }
-                positionTiltProvider?.let {
-                    val raw = it.run()
-                    val normalized = raw.coerceIn(TILT_MIN, TILT_MAX) // clamp to 0.0..1.0
-                    setTiltTargetNormalized(normalized)
-                }
-                return true
-            }
-        }
-    }
+//    fun holdVariableTiltPosition(positionTiltProvider: DoubleProvider?): LoggableAction {
+//        return object : LoggableAction {
+//            override val name: String
+//                get() = "$lastName HOLD_TILT_SERVO"
+//            var initialized = false
+//
+//            override fun run(p: TelemetryPacket): Boolean {
+//                if (!initialized) {
+//                    initialized = true
+//                }
+//                positionTiltProvider?.let {
+//                    val raw = it.run()
+//                    val normalized = raw.coerceIn(TILT_MIN, TILT_MAX) // clamp to 0.0..1.0
+//                    setTiltTargetNormalized(normalized)
+//                }
+//                return true
+//            }
+//        }
+//    }
 
 //    fun holdVariableSpinPosition(positionTiltProvider: DoubleProvider?): LoggableAction {
 //        return object : LoggableAction {
@@ -408,9 +408,9 @@ class Turret(hardwareMap: HardwareMap) : StateLoggable {
 //        Logging.DEBUG("$uniqueName TILT_MODE", tiltMotor.mode)
 //        Logging.DEBUG("$uniqueName TILT_POWER", tiltMotor.power)
 //        Logging.DEBUG("$uniqueName TILT_CURRENT", tiltMotor.getCurrent(CurrentUnit.AMPS))
-        Logging.DEBUG("$uniqueName TILT_POSITION", tiltServo.position)
-        Logging.DEBUG("$uniqueName TILT_POSITION", tiltCurrentPosition)
-        Logging.DEBUG("$uniqueName TILT_TARGET", tiltTarget)
+//        Logging.DEBUG("$uniqueName TILT_POSITION", tiltServo.position)
+//        Logging.DEBUG("$uniqueName TILT_POSITION", tiltCurrentPosition)
+//        Logging.DEBUG("$uniqueName TILT_TARGET", tiltTarget)
 //        Logging.DEBUG("$uniqueName TILT_VOLTAGE", tiltOutput.voltage)
 //        Logging.DEBUG("$uniqueName SPIN_POSITION", spinServo.position)
 //        Logging.DEBUG("$uniqueName SPIN_POSITION", spinCurrentPosition)

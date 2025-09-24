@@ -43,6 +43,8 @@ public class TeleOpHarry extends LinearOpMode {
     public static double kI_Tilt = 0.0;
     public static double kD_Tilt = 1.0;
 
+    public static double deg = 0.0;
+
     private double spinIntegral = 0;
     private double spinPrevError = 0;
 
@@ -86,7 +88,7 @@ public class TeleOpHarry extends LinearOpMode {
         while (!isStarted()) {
             p = new TelemetryPacket();
             driveBase.update(p);
-            ll.setTargetIdProvider(() -> targetId);
+//            ll.setTargetIdProvider(() -> targetId);
 
             Logging.update();
 
@@ -129,12 +131,12 @@ public class TeleOpHarry extends LinearOpMode {
         Deadline matchTimer = new Deadline(2, TimeUnit.MINUTES);
         while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
-            if (scanningAction.run(p)) break; // Target found
+//            if (scanningAction.run(p)) break; // Target found
             FtcDashboard.getInstance().sendTelemetryPacket(p);
             
 
             // Run turret tracking
-            turret.track().run(p);
+//            turret.track().run(p);
 //
 //            // --- Tilt PID ---
 //            tiltIntegral += ll.getTy();
@@ -149,24 +151,47 @@ public class TeleOpHarry extends LinearOpMode {
 
 //            if (Math.abs(ll.getTy()) < 0.5) tiltIntegral = 0;
 
-            // --- Spin PID ---
-            spinIntegral += ll.getTx();
-            double spinDerivative = ll.getTx() - spinPrevError;
-            double spinOutput = (kP_Spin * ll.getTx())
-                    + (kI_Spin * spinIntegral)
-                    + (kD_Spin * spinDerivative);
-            spinPrevError = ll.getTx();
+//            // --- Spin PID ---
+//            spinIntegral += ll.getTx();
+//            double spinDerivative = ll.getTx() - spinPrevError;
+//            double spinOutput = (kP_Spin * ll.getTx())
+//                    + (kI_Spin * spinIntegral)
+//                    + (kD_Spin * spinDerivative);
+//            spinPrevError = ll.getTx();
+//
+//            // Apply spin PID to motor
+//            turret.setSpinTarget(Turret.spinTarget + spinOutput);
 
-            // Apply spin PID to motor
-            turret.setSpinTarget(Turret.spinTarget + spinOutput);
+//            if (gamepad1.dpadRightWasPressed()){
+//                deg += 5.0;
+//                telemetry.addData("Value", deg);
+//                telemetry.update();
+//            }
+//
+//            if (gamepad1.dpadLeftWasPressed()){
+//                deg -= 5.0;
+//                telemetry.addData("Value", deg);
+//                telemetry.update();
+//            }
 
+//            // --- Spin PID ---
+//            spinIntegral += deg;
+//            double spinDerivative = deg - spinPrevError;
+//            double spinOutput = (kP_Spin * deg)
+//                    + (kI_Spin * spinIntegral)
+//                    + (kD_Spin * spinDerivative);
+//            spinPrevError = deg;
+//
+//            // Apply spin PID to motor
+//            turret.setSpinTarget(Turret.spinTarget + spinOutput);
+//
 
-            // --- Tilt correction (servo version) ---
-            double tiltCorrection = kP_Tilt * ll.getTy() / 20.0; // ±20° vertical FOV
-            double newTiltTarget = Turret.tiltTarget + tiltCorrection;
-            turret.setTiltTargetNormalized(newTiltTarget);
-
-            turret.aimTiltFromTyPID(ll.getTy());
+//            // --- Tilt correction (servo version) ---
+//            double tiltCorrection = kP_Tilt * ll.getTy() / 20.0; // ±20° vertical FOV
+//            double newTiltTarget = Turret.tiltTarget + tiltCorrection;
+//            turret.setTiltTargetNormalized(newTiltTarget);
+//
+//            turret.aimTiltFromTyPID(ll.getTy());
 
 //
 
@@ -175,9 +200,9 @@ public class TeleOpHarry extends LinearOpMode {
 
             // Show current values on DS
             telemetry.addData("Spin Target", Turret.spinTarget);
-            telemetry.addData("Tilt Target", Turret.tiltTarget);
+//            telemetry.addData("Tilt Target", Turret.tiltTarget);
             telemetry.addData("Spin Pos", turret.getSpinCurrentPosition());
-            telemetry.addData("Tilt Pos", turret.getTiltCurrentPosition());
+//            telemetry.addData("Tilt Pos", turret.getTiltCurrentPosition());
             telemetry.update();
 
 //            if (gamepad2.back) {
@@ -187,8 +212,8 @@ public class TeleOpHarry extends LinearOpMode {
 //            }
 
             Vector2d input = new Vector2d(
-                    gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x
+                    -gamepad1.left_stick_y,
+                    gamepad1.left_stick_x
             );
 
             PoseStorage.shouldHallucinate = (PoseStorage.splitControls ? gamepad2 : gamepad1).guide;
@@ -211,7 +236,8 @@ public class TeleOpHarry extends LinearOpMode {
 
 
             if (gamepad1.x){
-                outtake.setPower(RPM);
+//                outtake.setPower(RPM);
+                outtake.shoot();
             }
 
             if (gamepad1.xWasReleased()){
