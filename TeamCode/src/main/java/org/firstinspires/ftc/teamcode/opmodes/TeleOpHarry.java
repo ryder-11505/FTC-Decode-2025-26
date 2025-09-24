@@ -238,6 +238,7 @@ public class TeleOpHarry extends LinearOpMode {
             if (gamepad1.x){
 //                outtake.setPower(RPM);
                 outtake.shoot();
+                Logging.LOG("x");
             }
 
             if (gamepad1.xWasReleased()){
@@ -246,6 +247,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.a){
                 intake.intake();
+                Logging.LOG("a");
             }
 
             if (gamepad1.aWasReleased()){
@@ -254,6 +256,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.right_bumper){
                 intake.intake();
+                Logging.LOG("r");
             }
 
             if (gamepad1.rightBumperWasReleased()){
@@ -262,6 +265,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.b){
                 intake.outake();
+                Logging.LOG("b");
             }
 
             if (gamepad1.bWasReleased()){
