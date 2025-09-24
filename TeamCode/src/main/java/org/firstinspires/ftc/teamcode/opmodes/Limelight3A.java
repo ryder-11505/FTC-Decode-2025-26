@@ -71,16 +71,13 @@ public class Limelight3A extends LinearOpMode {
                         int id = fr.getFiducialId(); // The ID number of the fiducial
                         double x = fr.getTargetXDegrees(); // Where it is (left-right)
                         double y = fr.getTargetYDegrees(); // Where it is (up-down)
+                        Pose3D cameraPose = fr.getCameraPoseTargetSpace(); // Camera pose relative to the AprilTag (useful)
+                        Pose3D robotPose = fr.getRobotPoseFieldSpace(); // Robot pose in the field coordinate system based on this tag alone (useful)
+                        Pose3D tagPose = fr.getTargetPoseCameraSpace(); // AprilTag pose in the camera's coordinate system (not very useful)
                         double StrafeDistance_3D = fr.getRobotPoseTargetSpace().getPosition().y;
                         telemetry.addData("Fiducial", "ID: %d, Family: %s, X: %.2f, Y: %.2f", fr.getFiducialId(), fr.getFamily(),fr.getTargetXDegrees(), fr.getTargetYDegrees());
                     }
 
-
-//                    fiducial.getRobotPoseTargetSpace(); // Robot pose relative it the AprilTag Coordinate System (Most Useful)
-//                    fiducial.getCameraPoseTargetSpace(); // Camera pose relative to the AprilTag (useful)
-//                    fiducial.getRobotPoseFieldSpace(); // Robot pose in the field coordinate system based on this tag alone (useful)
-//                    fiducial.getTargetPoseCameraSpace(); // AprilTag pose in the camera's coordinate system (not very useful)
-//                    fiducial.getTargetPoseRobotSpace(); // AprilTag pose in the robot's coordinate system (not very useful)
 
                 }
             } else {

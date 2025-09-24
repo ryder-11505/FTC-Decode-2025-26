@@ -29,10 +29,13 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake.PARAMS
 class Outtake(hardwareMap: HardwareMap) : StateLoggable {
     companion object PARAMS {
         @JvmField
-        var speed = 1.0
+        var speed = 1.0 // 1.0 power ≈ 5600 RPM ∴ RPM = 5600(power) or RPM/5600 = power
+
+        var varSpeed = 0.0 // depends on how far the tag is from the ll
+
     }
 
-    val motor = hardwareMap.get(DcMotorEx::class.java, "outL")
+    val motor = hardwareMap.get(DcMotorEx::class.java, "out")
 
     init {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
@@ -49,6 +52,12 @@ class Outtake(hardwareMap: HardwareMap) : StateLoggable {
 //
 //            return false
 //        })
+    }
+
+    fun setPower(RPM: Double) {
+        val varSpeed = RPM / 5600
+
+        motor.power = varSpeed
     }
 
 
