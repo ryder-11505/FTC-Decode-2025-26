@@ -42,47 +42,33 @@ class Intake(hardwareMap: HardwareMap) : StateLoggable {
     }
 
     val motor = hardwareMap.get(DcMotorEx::class.java, "in")
+    val motor2 = hardwareMap.get(DcMotorEx::class.java, "in2")
 
     init {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        motor2.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
     fun intake() {
-//        var initialized = false
-//        return Loggable("INTAKE_RUN", fun(p: TelemetryPacket): Boolean {
-//            if (!initialized) {
-//                Logging.LOG("INTAKE")
-                motor.power = speed
-//                initialized = true
-//            }
-//
-//            return false
-//        })
+        motor.power = speed
+        motor2.power = - speed
     }
 
     fun outake() {
-//        var initialized = false
-//        return Loggable("OUTAKE_RUN", fun(p: TelemetryPacket): Boolean {
-//            if (!initialized) {
-//                Logging.LOG("OUTAKE")
-                motor.power = - speed
-//                initialized = true
-//            }
-//
-//            return false
-//        })
+        motor.power = - speed
+        motor2.power = speed
     }
 
     fun stopIntake() {
-//        return Loggable("STOP_INTAKE_MOTOR", InstantAction {
-//            Logging.LOG("STOP_INTAKE")
-            motor.power = 0.0
-//        })
+        motor.power = 0.0
+        motor2.power = 0.0
     }
 
     override fun logState(uniqueName: String?) {
         Logging.DEBUG("$uniqueName INTAKE_POWER", motor.power)
         Logging.DEBUG("$uniqueName INTAKE_CURRENT", motor.getCurrent(CurrentUnit.AMPS))
+        Logging.DEBUG("$uniqueName INTAKE_POWER", motor2.power)
+        Logging.DEBUG("$uniqueName INTAKE_CURRENT", motor2.getCurrent(CurrentUnit.AMPS))
     }
 
 }

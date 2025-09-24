@@ -104,8 +104,8 @@ public class TeleOpHarry extends LinearOpMode {
             }
 
             Vector2d input = new Vector2d(
-                    gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x
+                    -gamepad1.left_stick_y,
+                    gamepad1.left_stick_x
             );
 
             PoseStorage.shouldHallucinate = (PoseStorage.splitControls ? gamepad2 : gamepad1).guide;
@@ -136,6 +136,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.x){
                 outtake.shoot();
+                Logging.LOG("x");
             }
 
             if (gamepad1.xWasReleased()){
@@ -144,6 +145,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.a){
                 intake.intake();
+                Logging.LOG("a");
             }
 
             if (gamepad1.aWasReleased()){
@@ -152,6 +154,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.right_bumper){
                 intake.intake();
+                Logging.LOG("r");
             }
 
             if (gamepad1.rightBumperWasReleased()){
@@ -160,6 +163,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.b){
                 intake.outake();
+                Logging.LOG("b");
             }
 
             if (gamepad1.bWasReleased()){
