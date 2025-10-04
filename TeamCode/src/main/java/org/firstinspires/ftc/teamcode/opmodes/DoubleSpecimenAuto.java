@@ -27,8 +27,8 @@ import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
-import org.firstinspires.ftc.teamcode.subsystems.Limelight;
+//import org.firstinspires.ftc.teamcode.subsystems.Turret;
+//import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 import java.util.List;
 
@@ -107,21 +107,21 @@ public class DoubleSpecimenAuto extends LinearOpMode {
         VisionDetection visionDetection = new VisionDetection(hardwareMap);
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
-        Turret turret = new Turret(hardwareMap);
-        Limelight ll = new Limelight(hardwareMap, "limelight");
+//        Turret turret = new Turret(hardwareMap);
+//        Limelight ll = new Limelight(hardwareMap, "limelight");
         Logging.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
 
         Action startllAction = new Action() {
             @Override
             public boolean run(TelemetryPacket p) {
-                ll.start(); // call start once
+//                ll.start(); // call start once
                 return true; // immediately done
             }
         };
 
         Action initAction = new ParallelAction(
-                turret.scanForTarget(ll, 0.5, 400),
+//                turret.scanForTarget(ll, 0.5, 400),
                 startllAction,
                 new SequentialAction(
 

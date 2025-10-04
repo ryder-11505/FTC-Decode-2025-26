@@ -23,8 +23,8 @@ import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
-import org.firstinspires.ftc.teamcode.subsystems.Limelight;
-import org.firstinspires.ftc.teamcode.subsystems.Turret;
+//import org.firstinspires.ftc.teamcode.subsystems.Limelight;
+//import org.firstinspires.ftc.teamcode.subsystems.Turret;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +35,7 @@ public class TeleOpHarry extends LinearOpMode {
     public static double SlowmodeSpeed = 0.5;
     public static double SlowmodeTurning = 0.5;
 
-    public static double kP_Spin = Turret.ticksPerDegree; // ticksPerDeg = (encoderTicksPerRevolution / 360) * gearRatio
+//    public static double kP_Spin = Turret.ticksPerDegree; // ticksPerDeg = (encoderTicksPerRevolution / 360) * gearRatio
     public static double kI_Spin = 0.0; // ticksPerDeg ≈ 11.38
     public static double kD_Spin = 1.0; // Optii Encoders ticks/rev = 4096
                                         // Melonbotics Encoders ticks/rev = 4096
@@ -62,21 +62,21 @@ public class TeleOpHarry extends LinearOpMode {
         MecanumDrive driveBase = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
-        Limelight ll = new Limelight(hardwareMap, "limelight");
-        Turret turret = new Turret(hardwareMap);
+//        Limelight ll = new Limelight(hardwareMap, "limelight");
+//        Turret turret = new Turret(hardwareMap);
 
         Button fieldMode = new Button();
         Button slowMode = new Button();
 
         double g = 9.81; // Gravity
-        double d = ll.getHorizontalDistance(); // Horizontal disatnce
+//        double d = ll.getHorizontalDistance(); // Horizontal disatnce
         double h = 0.0; // Target height - Shooter height
         double r = 0.0; // Flywheel radius
-        double θ = Math.toRadians(ll.getTy()); // Launch angle
+//        double θ = Math.toRadians(ll.getTy()); // Launch angle
 
-        double v = Math.sqrt((g * (d * d)) / (2 * (Math.cos(θ) * Math.cos(θ)) * (d * Math.tan(θ) + h))); // projectile muzzle velocity m/s
+//        double v = Math.sqrt((g * (d * d)) / (2 * (Math.cos(θ) * Math.cos(θ)) * (d * Math.tan(θ) + h))); // projectile muzzle velocity m/s
 
-        double RPM = (60 * v) / (2 * Math.PI * r); // Flywheel RPM
+//        double RPM = (60 * v) / (2 * Math.PI * r); // Flywheel RPM
 
 
         Logging.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -124,7 +124,7 @@ public class TeleOpHarry extends LinearOpMode {
 
         FinishingState finishState = FinishingState.Outtake;
 
-        LoggableAction scanningAction = turret.scanForTarget(ll, 0.5, 400);
+//        LoggableAction scanningAction = turret.scanForTarget(ll, 0.5, 400);
 
 
         PoseStorage.isInit = false;
@@ -199,9 +199,9 @@ public class TeleOpHarry extends LinearOpMode {
 //            if (Math.abs(ll.getTx()) < 0.5) spinIntegral = 0;
 
             // Show current values on DS
-            telemetry.addData("Spin Target", Turret.spinTarget);
-//            telemetry.addData("Tilt Target", Turret.tiltTarget);
-            telemetry.addData("Spin Pos", turret.getSpinCurrentPosition());
+//            telemetry.addData("Spin Target", Turret.spinTarget);
+////            telemetry.addData("Tilt Target", Turret.tiltTarget);
+//            telemetry.addData("Spin Pos", turret.getSpinCurrentPosition());
 //            telemetry.addData("Tilt Pos", turret.getTiltCurrentPosition());
             telemetry.update();
 
