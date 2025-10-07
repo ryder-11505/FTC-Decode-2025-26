@@ -35,7 +35,7 @@ class Outtake(hardwareMap: HardwareMap) : StateLoggable {
 
     }
 
-    val motor = hardwareMap.get(DcMotorEx::class.java, "out")
+    val motor = hardwareMap.get(DcMotorEx::class.java, "outL")
 
     init {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
