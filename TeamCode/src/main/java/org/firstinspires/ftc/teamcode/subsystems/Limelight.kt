@@ -43,6 +43,8 @@ class Limelight(hardwareMap: HardwareMap, deviceName: String) {
             return latestResult?.fiducialResults?.firstOrNull { it.fiducialId == id }
         }
 
+
+
     init {
         limelight.pipelineSwitch(0) // default pipeline
         limelight.start()           // start polling for data
@@ -61,6 +63,11 @@ class Limelight(hardwareMap: HardwareMap, deviceName: String) {
         limelight.setPollRateHz(100)
     }
 
+    val isTagDetected = latestResult?.fiducialResults?.isNotEmpty() == true
+
+    // Get the first detected tag's ID (before setting targetId)
+    val detectedId = latestResult?.fiducialResults?.firstOrNull()?.fiducialId
+
     /** Get robot pose (null if no valid result) */
     val botPose: Pose3D?
         get() = latestResult?.botpose
@@ -68,6 +75,16 @@ class Limelight(hardwareMap: HardwareMap, deviceName: String) {
     /** Get fiducial detections (AprilTags, etc.) */
     val fiducials: List<LLResultTypes.FiducialResult>?
         get() = latestResult?.fiducialResults
+
+    val tagRelativeBotPose: Pose3D?
+        get() = latestResult?.fiducialResults?.firstOrNull()?.robotPoseTargetSpace
+
+    val tagRelativeCameraPose: Pose3D?
+        get() = latestResult?.fiducialResults?.firstOrNull()?.cameraPoseTargetSpace
+
+    val fieldRelativeBotPose: Pose3D?
+        get() = latestResult?.fiducialResults?.firstOrNull()?.robotPoseFieldSpace
+
 
     /** Horizontal offset from tracked tag */
     val tx: Double?

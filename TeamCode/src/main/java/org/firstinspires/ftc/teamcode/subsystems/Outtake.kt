@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.teamcode.galahlib.StateLoggable
 import org.firstinspires.ftc.teamcode.galahlib.actions.Loggable
@@ -29,7 +30,10 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake.PARAMS
 class Outtake(hardwareMap: HardwareMap) : StateLoggable {
     companion object PARAMS {
         @JvmField
-        var speed = 1.0 // 1.0 power ≈ 5600 RPM ∴ RPM = 5600(power) or RPM/5600 = power
+        var speedShort = 0.8 // 1.0 power ≈ 5600 RPM ∴ RPM = 5600(power) or RPM/5600 = power
+
+        @JvmField
+        var speedLong= 0.9 // 1.0 power ≈ 5600 RPM ∴ RPM = 5600(power) or RPM/5600 = power
 
         var varSpeed = 0.0 // depends on how far the tag is from the ll
 
@@ -39,14 +43,21 @@ class Outtake(hardwareMap: HardwareMap) : StateLoggable {
 
     init {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
+        motor.setVelocityPIDFCoefficients(1.0,0.0,0.0,0.0)
     }
 
-    fun shoot() {
+    fun shootShort() {
+//        motor.power = - speedShort
+        motor.setVelocity(237.0, AngleUnit.RADIANS)
+    }
+
+    fun shootLong() {
 //        var initialized = false
 //        return Loggable("SHOOT_RUN", fun(p: TelemetryPacket): Boolean {
 //            if (!initialized) {
 //                Logging.LOG("SHOOT")
-                motor.power = speed
+        motor.power = - speedLong
 //                initialized = true
 //            }
 //

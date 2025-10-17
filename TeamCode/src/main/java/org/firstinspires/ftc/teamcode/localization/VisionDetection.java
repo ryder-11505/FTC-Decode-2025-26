@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,8 +13,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Drawing;
+import org.firstinspires.ftc.teamcode.opmodes.TeleOpHarry;
 import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+
+import java.util.List;
 
 @Config
 public class VisionDetection {
@@ -27,6 +32,7 @@ public class VisionDetection {
         limelight.setPollRateHz(30);
         limelight.pipelineSwitch(0);
         limelight.start();
+
     }
 
     public void update(PinpointLocalizer localizer, TelemetryPacket packet) {
@@ -46,6 +52,19 @@ public class VisionDetection {
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid() && result.getStddevMt2()[0] < stdDevLimit && result.getControlHubTimeStamp() > lastResult) {
             lastResult = result.getControlHubTimeStamp();
+
+            List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+            for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                int detectedID = fiducial.getFiducialId(); // The ID number of the fiducial
+                double Xoffset = fiducial.getTargetXDegrees(); // Where it is (left-right)
+                double Yoffset = fiducial.getTargetYDegrees(); // Where it is (up-down)
+                double Ydistance = fiducial.getRobotPoseTargetSpace().getPosition().y;
+                double Xdistance = fiducial.getRobotPoseTargetSpace().getPosition().x;
+                Pose3D tagRelativeCameraPose = fiducial.getCameraPoseTargetSpace(); // Camera pose relative to the AprilTag (useful)
+                Pose3D fieldRelativeBotPose = fiducial.getRobotPoseFieldSpace(); // Robot pose in the field coordinate system based on this tag alone (useful)
+                Logging.LOG("Fiducial " + detectedID, "is " + Ydistance + " meters away");
+            }
+
 
             // Access general information
             Pose3D botpose = result.getBotpose_MT2();

@@ -10,21 +10,27 @@ import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.galahlib.Button;
 import org.firstinspires.ftc.teamcode.galahlib.actions.Loggable;
 import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction;
+import org.firstinspires.ftc.teamcode.galahlib.mechanisms.TurretSpin;
+import org.firstinspires.ftc.teamcode.localization.VisionDetection;
 import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
 import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
-//import org.firstinspires.ftc.teamcode.subsystems.Limelight;
-//import org.firstinspires.ftc.teamcode.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.subsystems.Limelight;
+import org.firstinspires.ftc.teamcode.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.subsystems.TurretSimple;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +41,9 @@ public class TeleOpHarry extends LinearOpMode {
     public static double SlowmodeSpeed = 0.5;
     public static double SlowmodeTurning = 0.5;
 
-//    public static double kP_Spin = Turret.ticksPerDegree; // ticksPerDeg = (encoderTicksPerRevolution / 360) * gearRatio
+    public static double TriggerMin = 0.01;
+
+    public static double kP_Spin = Turret.ticksPerDegree; // ticksPerDeg = (encoderTicksPerRevolution / 360) * gearRatio
     public static double kI_Spin = 0.0; // ticksPerDeg ≈ 11.38
     public static double kD_Spin = 1.0; // Optii Encoders ticks/rev = 4096
                                         // Melonbotics Encoders ticks/rev = 4096
@@ -51,8 +59,11 @@ public class TeleOpHarry extends LinearOpMode {
     private double tiltIntegral = 0;
     private double tiltPrevError = 0;
 
-    private int targetId = 24; // default tag ID
+    public int targetId = 24; // default tag ID
 
+    private LoggableAction scanningAction = null;
+    private LoggableAction trackingAction = null;
+    private boolean isScanning = false;
 
 
 
@@ -60,22 +71,26 @@ public class TeleOpHarry extends LinearOpMode {
     @Override
     public void runOpMode() {
         MecanumDrive driveBase = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
+        VisionDetection visionDetection = new VisionDetection(hardwareMap);
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
-//        Limelight ll = new Limelight(hardwareMap, "limelight");
+        Limelight ll = new Limelight(hardwareMap, "limelight");
 //        Turret turret = new Turret(hardwareMap);
+        TurretSimple spinSimple = new TurretSimple(hardwareMap);
+
+//        turret.unlock();
 
         Button fieldMode = new Button();
         Button slowMode = new Button();
 
-        double g = 9.81; // Gravity
-//        double d = ll.getHorizontalDistance(); // Horizontal disatnce
-        double h = 0.0; // Target height - Shooter height
-        double r = 0.0; // Flywheel radius
-//        double θ = Math.toRadians(ll.getTy()); // Launch angle
-
+//        double g = 386.09; // Gravity
+//        double d = use odo; // Horizontal disatnce
+//        double h = 20.75; // Target height - Shooter height
+//        double r = 4.0; // Flywheel radius
+//        double θ = 40.0; // Launch angle
+//
 //        double v = Math.sqrt((g * (d * d)) / (2 * (Math.cos(θ) * Math.cos(θ)) * (d * Math.tan(θ) + h))); // projectile muzzle velocity m/s
-
+//
 //        double RPM = (60 * v) / (2 * Math.PI * r); // Flywheel RPM
 
 
@@ -88,7 +103,33 @@ public class TeleOpHarry extends LinearOpMode {
         while (!isStarted()) {
             p = new TelemetryPacket();
             driveBase.update(p);
-//            ll.setTargetIdProvider(() -> targetId);
+            visionDetection.update(driveBase.localizer, p);
+            spinSimple.resetEncoder();
+            Motif motif = Motif.None;
+
+//            if (ll.isTagDetected()){
+//                ll.getDetectedId();
+//                if (ll.getDetectedId() == 21){
+//                    motif = Motif.GPP;
+//                } else if (ll.getDetectedId() == 22){
+//                    motif = Motif.PGP;
+//                } else if (ll.getDetectedId() == 23){
+//                    motif = Motif.PPG;
+//                }
+//                switch (motif) {
+//                    case GPP:
+//                        // Go to corresponding group of artifacts on field
+//                        break;
+//                    case PGP:
+//                        // Go to corresponding group of artifacts on field
+//                        break;
+//                    case PPG:
+//                        // Go to corresponding group of artifacts on field
+//                        break;
+//                }
+//            } else {
+//                Logging.LOG("No Target Found");
+//            }
 
             Logging.update();
 
@@ -121,35 +162,22 @@ public class TeleOpHarry extends LinearOpMode {
 
         ));
 
+        spinSimple.resetEncoder();
 
         FinishingState finishState = FinishingState.Outtake;
 
-//        LoggableAction scanningAction = turret.scanForTarget(ll, 0.5, 400);
 
 
         PoseStorage.isInit = false;
         Deadline matchTimer = new Deadline(2, TimeUnit.MINUTES);
         while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
-//            if (scanningAction.run(p)) break; // Target found
             FtcDashboard.getInstance().sendTelemetryPacket(p);
-            
-
-            // Run turret tracking
-//            turret.track().run(p);
 //
-//            // --- Tilt PID ---
-//            tiltIntegral += ll.getTy();
-//            double tiltDerivative = ll.getTy() - tiltPrevError;
-//            double tiltOutput = (kP_Tilt * ll.getTy())
-//                    + (kI_Tilt * tiltIntegral)
-//                    + (kD_Tilt * tiltDerivative);
-//            tiltPrevError = ll.getTy();
-//
-//            // Send outputs to turret (scale/clamp if needed)
-//            turret.setTiltTarget(Turret.tiltTarget + tiltOutput);
 
-//            if (Math.abs(ll.getTy()) < 0.5) tiltIntegral = 0;
+
+//             Run turret tracking
+//            turret.track(() -> ll.getTx());
 
 //            // --- Spin PID ---
 //            spinIntegral += ll.getTx();
@@ -162,29 +190,27 @@ public class TeleOpHarry extends LinearOpMode {
 //            // Apply spin PID to motor
 //            turret.setSpinTarget(Turret.spinTarget + spinOutput);
 
-//            if (gamepad1.dpadRightWasPressed()){
-//                deg += 5.0;
-//                telemetry.addData("Value", deg);
-//                telemetry.update();
-//            }
-//
-//            if (gamepad1.dpadLeftWasPressed()){
-//                deg -= 5.0;
-//                telemetry.addData("Value", deg);
-//                telemetry.update();
-//            }
+//            // Reset spin integral near zero
+//            if (Math.abs(ll.getTx()) < 0.5) spinIntegral = 0;
 
-//            // --- Spin PID ---
-//            spinIntegral += deg;
-//            double spinDerivative = deg - spinPrevError;
-//            double spinOutput = (kP_Spin * deg)
-//                    + (kI_Spin * spinIntegral)
-//                    + (kD_Spin * spinDerivative);
-//            spinPrevError = deg;
-//
-//            // Apply spin PID to motor
-//            turret.setSpinTarget(Turret.spinTarget + spinOutput);
-//
+
+            if (gamepad1.right_bumper) {
+                spinSimple.track(116);
+            }
+
+            if (gamepad1.rightBumperWasReleased()) {
+                spinSimple.track(0);
+            }
+
+            if (gamepad1.left_bumper) {
+                spinSimple.track(-116);
+            }
+
+            if (gamepad1.leftBumperWasReleased()) {
+                spinSimple.track(0);
+            }
+
+
 
 //            // --- Tilt correction (servo version) ---
 //            double tiltCorrection = kP_Tilt * ll.getTy() / 20.0; // ±20° vertical FOV
@@ -193,17 +219,6 @@ public class TeleOpHarry extends LinearOpMode {
 //
 //            turret.aimTiltFromTyPID(ll.getTy());
 
-//
-
-//            // Reset spin integral near zero
-//            if (Math.abs(ll.getTx()) < 0.5) spinIntegral = 0;
-
-            // Show current values on DS
-//            telemetry.addData("Spin Target", Turret.spinTarget);
-////            telemetry.addData("Tilt Target", Turret.tiltTarget);
-//            telemetry.addData("Spin Pos", turret.getSpinCurrentPosition());
-//            telemetry.addData("Tilt Pos", turret.getTiltCurrentPosition());
-            telemetry.update();
 
 //            if (gamepad2.back) {
 //                PoseStorage.splitControls = true;
@@ -219,7 +234,6 @@ public class TeleOpHarry extends LinearOpMode {
             PoseStorage.shouldHallucinate = (PoseStorage.splitControls ? gamepad2 : gamepad1).guide;
 
 
-
             if (gamepad2.dpad_right) {
                 PoseStorage.isRedAlliance = true; // Tag ID 24
                 targetId = 24;
@@ -228,50 +242,59 @@ public class TeleOpHarry extends LinearOpMode {
                 targetId = 20;
             }
 
-            slowMode.update(gamepad1.y);
-            fieldMode.update(gamepad1.x);
+//            slowMode.update(gamepad1.y);
+//            fieldMode.update(gamepad1.x);
 
 
             driveBase.update(p);
 
 
-            if (gamepad1.x){
+            if (gamepad1.x) {
 //                outtake.setPower(RPM);
-                outtake.shoot();
+                outtake.shootShort();
                 Logging.LOG("x");
             }
 
-            if (gamepad1.xWasReleased()){
+            if (gamepad1.xWasReleased()) {
                 outtake.stopShoot();
             }
 
-            if (gamepad1.a){
+            if (gamepad1.y) {
+//                outtake.setPower(RPM);
+                outtake.shootLong();
+                Logging.LOG("y");
+            }
+
+            if (gamepad1.yWasReleased()) {
+                outtake.stopShoot();
+            }
+
+            if (gamepad1.a) {
                 intake.intake();
                 Logging.LOG("a");
             }
 
-            if (gamepad1.aWasReleased()){
+            if (gamepad1.aWasReleased()) {
                 intake.stopIntake();
             }
 
-            if (gamepad1.right_bumper){
-                intake.intake();
-                Logging.LOG("r");
-            }
+//            if (gamepad1.right_bumper) {
+//                intake.intake();
+//                Logging.LOG("r");
+//            }
+//
+//            if (gamepad1.rightBumperWasReleased()) {
+//                intake.stopIntake();
+//            }
 
-            if (gamepad1.rightBumperWasReleased()){
-                intake.stopIntake();
-            }
-
-            if (gamepad1.b){
+            if (gamepad1.b) {
                 intake.outake();
                 Logging.LOG("b");
             }
 
-            if (gamepad1.bWasReleased()){
+            if (gamepad1.bWasReleased()) {
                 intake.stopIntake();
             }
-
 
 
             Pose2d poseEstimate = driveBase.localizer.getPose();
@@ -294,8 +317,6 @@ public class TeleOpHarry extends LinearOpMode {
             driveBase.setDrivePowers(drivePower);
 
 
-
-
             Logging.LOG("FINISH_STATE", finishState);
             if (finishingAction != null) {
                 Logging.DEBUG("FINISH_ACTION", finishingAction.getName());
@@ -307,15 +328,26 @@ public class TeleOpHarry extends LinearOpMode {
                 }
             }
 
-
-
-
-
+            Logging.LOG("SCANNING_MODE", isScanning);
+            if (isScanning) {
+                Logging.LOG("SCAN_STATE", scanningAction != null ? "SCANNING" : "TRACKING");
+            }
+            Logging.LOG("Spin Target", spinSimple.getSpinTargetPos());
+            Logging.LOG("Spin Pos", spinSimple.getSpinCurrentPosition());
+            Logging.LOG("Spin Status", spinSimple.getSpinMotor().isBusy());
+            Logging.LOG("Spin Power", spinSimple.getSpinMotor().getPower());
             Logging.LOG("CURRENT_TEAM", PoseStorage.isRedAlliance ? "RED" : "BLUE");
 //            Logging.LOG("SPLIT", PoseStorage.splitControls);
             Logging.LOG("FIELD_MODE", fieldMode.val);
             Logging.LOG("SLOW_MODE", slowMode.val);
             Logging.LOG("HALLUCINATING", PoseStorage.shouldHallucinate);
+            Logging.LOG("LL_TAG_DETECTED", ll.isTagDetected());
+//            Logging.LOG("LL_TX", ll.getTx());
+//            Logging.LOG("LL_TY", ll.getTy());
+//            if (ll.isTagDetected()) {
+//                Logging.LOG("LL_DETECTED_ID", ll.getDetectedId());
+//            }
+
 
             for (LynxModule module : allHubs) {
                 module.clearBulkCache();
@@ -328,11 +360,16 @@ public class TeleOpHarry extends LinearOpMode {
         }
     }
 
-
-
     enum FinishingState {
         Intake,
         Outtake,
+        None
+    }
+
+    enum Motif {
+        PPG,
+        PGP,
+        GPP,
         None
     }
 }
