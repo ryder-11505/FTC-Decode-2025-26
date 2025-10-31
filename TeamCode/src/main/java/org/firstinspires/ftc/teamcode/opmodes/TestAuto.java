@@ -1,16 +1,22 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
+import com.acmerobotics.roadrunner.InstantFunction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -20,6 +26,7 @@ import com.userjhansen.automap.Maps.Map;
 import com.userjhansen.automap.Maps.OutsideOneForDoubleSpecimen;
 
 import org.firstinspires.ftc.teamcode.MecanumDrive;
+import org.firstinspires.ftc.teamcode.galahlib.actions.Loggable;
 import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction;
 import org.firstinspires.ftc.teamcode.galahlib.actions.Timeout;
 import org.firstinspires.ftc.teamcode.localization.VisionDetection;
@@ -29,10 +36,12 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.subsystems.Turret;
+import org.firstinspires.ftc.teamcode.subsystems.TurretSimple;
 //import org.firstinspires.ftc.teamcode.subsystems.Turret;
 //import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 import java.util.List;
+import java.util.logging.LoggingMXBean;
 
 @Autonomous(name = "Test Auto")
 @Config
@@ -108,30 +117,78 @@ public class TestAuto extends LinearOpMode {
         MecanumDrive driveBase = new MecanumDrive(hardwareMap, PoseStorage.currentPose);
         Intake intake = new Intake(hardwareMap);
         Outtake outtake = new Outtake(hardwareMap);
+        VisionDetection visionDetection = new VisionDetection(hardwareMap);
         Limelight ll = new Limelight(hardwareMap, "limelight");
-        Turret turret = new Turret(hardwareMap);
+//        Turret turret = new Turret(hardwareMap);
+        TurretSimple spinSimple = new TurretSimple(hardwareMap);
+
+
+        LLResult result = visionDetection.limelight.getLatestResult();
+        LLResultTypes.FiducialResult fr = (LLResultTypes.FiducialResult) result.getFiducialResults();
+
+        int tagId = fr.getFiducialId();
+
+        Motif motif = Motif.None;
+
+        if (result.isValid()){
+            fr.getFiducialId();
+            if (fr.getFiducialId() == 21){
+                motif = Motif.GPP;
+            } else if (fr.getFiducialId() == 22){
+                motif = Motif.PGP;
+            } else if (fr.getFiducialId() == 23){
+                motif = Motif.PPG;
+            }
+            switch (motif) {
+                case GPP:
+                    // Go to corresponding group of artifacts on field
+                    break;
+                case PGP:
+                    // Go to corresponding group of artifacts on field
+                    break;
+                case PPG:
+                    // Go to corresponding group of artifacts on field
+                    break;
+            }
+        } else {
+            Logging.LOG("No Target Found");
+        }
+
+        Pose2d pose = driveBase.localizer.getPose();
+
+        double X = pose.position.x;
+
+        double Y = pose.position.y;
+
+        double H = Math.toDegrees(pose.heading.toDouble());
+
+        double Dr = Math.sqrt(Math.pow((72 - Y), 2) + Math.pow((72 + X), 2));
+
+        double Db = Math.sqrt(Math.pow((-72 - Y), 2) + Math.pow((72 + X), 2));
+
+        double Hr = (- Math.atan(((X + 72) / (Y + 72))) + H);
+
+        double Hb = Math.atan(((X + 72) / (Y + 72)) - 180 + H);
+
+        double Hm = Math.asin(((X + 72) / (Y + 72)) + H);
+
+        double a = (7.5 / 97) * (53);
+
+        double b = 22 - a;
+
+        double RSr = (7.5 / 97) * (Dr + 19) + b;
+
+        double RSb = (7.5 / 97) * (Db + 19) + b;
 
         Logging.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
 
-        Action startllAction = new Action() {
-            @Override
-            public boolean run(TelemetryPacket p) {
-                ll.start(); // call start once
-                return true; // immediately done
-            }
-        };
-
         Action initAction = new ParallelAction(
-//                turret.scanForTarget(ll, 0.5, 400),
-                startllAction,
-                new SequentialAction(
 
-                )
         );
 
 //        Run initialisation tasks
-        turret.unlock();
+        visionDetection.limelight.start();
         TelemetryPacket p = new TelemetryPacket();
         while (!isStarted() && initAction.run(p)) {
             FtcDashboard.getInstance().sendTelemetryPacket(p);
@@ -140,7 +197,6 @@ public class TestAuto extends LinearOpMode {
         }
 
 
-        turret.lockout();
 
         boolean innerPosition = false;
         while (!isStarted()) {
@@ -171,7 +227,6 @@ public class TestAuto extends LinearOpMode {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         }
 
-        turret.unlock();
 
         Map map = innerPosition ? new InsideOne() : new OutsideOneForDoubleSpecimen();
 
@@ -184,15 +239,18 @@ public class TestAuto extends LinearOpMode {
                 -map.getStartPosition().position.y,
                 map.getStartPosition().heading.plus(Math.PI).toDouble()));
 
+
         // Scan Motif
         builder = builder.strafeTo(map.getSpecimenPosition().position)
                 .stopAndAdd(
                         new SequentialAction(
-//                                outtake.raiseSpecimen(true),
-//                                new Timeout(
-//                                        outtake.ensureSpecimenPlaced(), 3
-//                                ),
-//                                outtake.safeAutoReturnSpecimen()
+                                new Action() {
+                                    @Override
+                                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                                        outtake.shootSuperShort();
+                                        return false;
+                                    }
+                                }
                         )
                 ).strafeTo(new Vector2d(0, -52));
         // Strafe to relevant set of artifacts on field
@@ -246,5 +304,12 @@ public class TestAuto extends LinearOpMode {
             FtcDashboard.getInstance().sendTelemetryPacket(p);
         }
 
+    }
+
+    enum Motif {
+        PPG,
+        PGP,
+        GPP,
+        None
     }
 }

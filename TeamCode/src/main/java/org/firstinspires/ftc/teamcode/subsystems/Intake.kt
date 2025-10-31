@@ -49,14 +49,15 @@ class Intake(hardwareMap: HardwareMap) : StateLoggable {
         motor2.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
     }
 
+
     fun intake() {
-        motor.power = speed
-        motor2.power = - speed
+        motor.power = - speed
+        motor2.power = speed
     }
 
     fun outake() {
-        motor.power = - speed
-        motor2.power = speed
+        motor.power = speed
+        motor2.power = - speed
     }
 
     fun stopIntake() {

@@ -13,3 +13,4 @@ class Loggable(override val name: String, val action: Action) : LoggableAction {
     }
 
 }
+

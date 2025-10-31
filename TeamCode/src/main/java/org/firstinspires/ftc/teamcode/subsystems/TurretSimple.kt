@@ -45,7 +45,7 @@ class TurretSimple(hardwareMap: HardwareMap) : StateLoggable {
 
         // REV HD Hex Motor = 28 CPR, 20:1 gear ratio
         private const val encoderCPR = 28.0
-        private const val gearRatio = 20.0
+        private const val gearRatio = 15.0
         private const val ticksPerRev = encoderCPR * gearRatio
         @JvmField
         var ticksPerDegree: Double = ticksPerRev / 360.0  // ≈ 1.56 ticks/degree
@@ -100,11 +100,7 @@ class TurretSimple(hardwareMap: HardwareMap) : StateLoggable {
         }
     }
 
-    fun scan() {
-
-    }
-
-    fun resetEncoder () {
+    fun resetEncoder() {
         spinMotor.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
     }
 

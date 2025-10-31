@@ -6,6 +6,7 @@ import com.qualcomm.hardware.limelightvision.LLStatus
 import com.qualcomm.hardware.limelightvision.Limelight3A
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D
+import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction
 
 /**
  * A helper class to manage Limelight3A vision without being tied to an OpMode.
@@ -120,6 +121,7 @@ class Limelight(hardwareMap: HardwareMap, deviceName: String) {
 
     val pythonOutput: DoubleArray?
         get() = latestResult?.pythonOutput
+
 
     /** Example: get details from each detected fiducial */
     fun getFiducialData(): List<Map<String, Any?>> {

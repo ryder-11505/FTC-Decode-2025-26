@@ -16,6 +16,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -78,21 +79,42 @@ public class TeleOpHarry extends LinearOpMode {
 //        Turret turret = new Turret(hardwareMap);
         TurretSimple spinSimple = new TurretSimple(hardwareMap);
 
+//        LLResult result = visionDetection.limelight.getLatestResult();
+//        LLResultTypes.FiducialResult fr = (LLResultTypes.FiducialResult) result.getFiducialResults();
+//
+//        int tagId = fr.getFiducialId();
+
+        Pose2d pose = driveBase.localizer.getPose();
+
+
 //        turret.unlock();
 
         Button fieldMode = new Button();
         Button slowMode = new Button();
 
-//        double g = 386.09; // Gravity
-//        double d = use odo; // Horizontal disatnce
-//        double h = 20.75; // Target height - Shooter height
-//        double r = 4.0; // Flywheel radius
-//        double θ = 40.0; // Launch angle
-//
-//        double v = Math.sqrt((g * (d * d)) / (2 * (Math.cos(θ) * Math.cos(θ)) * (d * Math.tan(θ) + h))); // projectile muzzle velocity m/s
-//
-//        double RPM = (60 * v) / (2 * Math.PI * r); // Flywheel RPM
+        double X = pose.position.x;
 
+        double Y = pose.position.y;
+
+        double H = Math.toDegrees(pose.heading.toDouble());
+
+        double Dr = Math.sqrt(Math.pow((72 - Y), 2) + Math.pow((72 + X), 2));
+
+        double Db = Math.sqrt(Math.pow((-72 - Y), 2) + Math.pow((72 + X), 2));
+
+        double Hr = (- Math.atan(((X + 72) / (Y + 72))) + H);
+
+        double Hb = Math.atan(((X + 72) / (Y + 72)) - 180 + H);
+
+        double Hm = Math.asin(((X + 72) / (Y + 72)) + H);
+
+        double a = (7.5 / 97) * (53);
+
+        double b = 22 - a;
+
+        double RSr = (7.5 / 97) * (Dr + 19) + b;
+
+        double RSb = (7.5 / 97) * (Db + 19) + b;
 
         Logging.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -105,32 +127,6 @@ public class TeleOpHarry extends LinearOpMode {
             driveBase.update(p);
             visionDetection.update(driveBase.localizer, p);
             spinSimple.resetEncoder();
-            Motif motif = Motif.None;
-
-//            if (ll.isTagDetected()){
-//                ll.getDetectedId();
-//                if (ll.getDetectedId() == 21){
-//                    motif = Motif.GPP;
-//                } else if (ll.getDetectedId() == 22){
-//                    motif = Motif.PGP;
-//                } else if (ll.getDetectedId() == 23){
-//                    motif = Motif.PPG;
-//                }
-//                switch (motif) {
-//                    case GPP:
-//                        // Go to corresponding group of artifacts on field
-//                        break;
-//                    case PGP:
-//                        // Go to corresponding group of artifacts on field
-//                        break;
-//                    case PPG:
-//                        // Go to corresponding group of artifacts on field
-//                        break;
-//                }
-//            } else {
-//                Logging.LOG("No Target Found");
-//            }
-
             Logging.update();
 
             FtcDashboard.getInstance().sendTelemetryPacket(p);
@@ -157,7 +153,6 @@ public class TeleOpHarry extends LinearOpMode {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         }
 
-
         LoggableAction finishingAction = new Loggable("INIT", new ParallelAction(
 
         ));
@@ -173,25 +168,6 @@ public class TeleOpHarry extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
             FtcDashboard.getInstance().sendTelemetryPacket(p);
-//
-
-
-//             Run turret tracking
-//            turret.track(() -> ll.getTx());
-
-//            // --- Spin PID ---
-//            spinIntegral += ll.getTx();
-//            double spinDerivative = ll.getTx() - spinPrevError;
-//            double spinOutput = (kP_Spin * ll.getTx())
-//                    + (kI_Spin * spinIntegral)
-//                    + (kD_Spin * spinDerivative);
-//            spinPrevError = ll.getTx();
-//
-//            // Apply spin PID to motor
-//            turret.setSpinTarget(Turret.spinTarget + spinOutput);
-
-//            // Reset spin integral near zero
-//            if (Math.abs(ll.getTx()) < 0.5) spinIntegral = 0;
 
 
             if (gamepad1.right_bumper) {
@@ -212,12 +188,27 @@ public class TeleOpHarry extends LinearOpMode {
 
 
 
-//            // --- Tilt correction (servo version) ---
-//            double tiltCorrection = kP_Tilt * ll.getTy() / 20.0; // ±20° vertical FOV
-//            double newTiltTarget = Turret.tiltTarget + tiltCorrection;
-//            turret.setTiltTargetNormalized(newTiltTarget);
+//            if (gamepad1.right_bumper && PoseStorage.isRedAlliance) {
+//                spinSimple.track(Hr);
+//            } else if (gamepad1.right_bumper && !PoseStorage.isRedAlliance) {
+//                spinSimple.track(Hb);
+//            }
 //
-//            turret.aimTiltFromTyPID(ll.getTy());
+//            if (gamepad1.rightBumperWasReleased()) {
+//                spinSimple.track(0);
+//            }
+//
+//            if (gamepad1.x && PoseStorage.isRedAlliance) {
+//                outtake.setPower(RSr);
+//                Logging.LOG("x");
+//            } else if (gamepad1.x && !PoseStorage.isRedAlliance) {
+//                outtake.setPower(RSb);
+//                Logging.LOG("x");
+//            }
+//
+//            if (gamepad1.xWasReleased()) {
+//                outtake.stopShoot();
+//            }
 
 
 //            if (gamepad2.back) {
@@ -227,8 +218,8 @@ public class TeleOpHarry extends LinearOpMode {
 //            }
 
             Vector2d input = new Vector2d(
-                    -gamepad1.left_stick_y,
-                    gamepad1.left_stick_x
+                    gamepad1.left_stick_y,
+                    -gamepad1.left_stick_x
             );
 
             PoseStorage.shouldHallucinate = (PoseStorage.splitControls ? gamepad2 : gamepad1).guide;
@@ -250,7 +241,7 @@ public class TeleOpHarry extends LinearOpMode {
 
 
             if (gamepad1.x) {
-//                outtake.setPower(RPM);
+//                outtake.setPower(RS);
                 outtake.shootShort();
                 Logging.LOG("x");
             }
@@ -260,7 +251,6 @@ public class TeleOpHarry extends LinearOpMode {
             }
 
             if (gamepad1.y) {
-//                outtake.setPower(RPM);
                 outtake.shootLong();
                 Logging.LOG("y");
             }
@@ -278,22 +268,14 @@ public class TeleOpHarry extends LinearOpMode {
                 intake.stopIntake();
             }
 
-//            if (gamepad1.right_bumper) {
-//                intake.intake();
-//                Logging.LOG("r");
-//            }
-//
-//            if (gamepad1.rightBumperWasReleased()) {
-//                intake.stopIntake();
-//            }
 
             if (gamepad1.b) {
-                intake.outake();
+                outtake.shootSuperShort();
                 Logging.LOG("b");
             }
 
             if (gamepad1.bWasReleased()) {
-                intake.stopIntake();
+                outtake.stopShoot();
             }
 
 
@@ -332,6 +314,9 @@ public class TeleOpHarry extends LinearOpMode {
             if (isScanning) {
                 Logging.LOG("SCAN_STATE", scanningAction != null ? "SCANNING" : "TRACKING");
             }
+            Logging.LOG("shooter velocity (rad/s)", outtake.getMotor().getVelocity(AngleUnit.RADIANS));
+            Logging.LOG("shooter velocity (ticks/s)", outtake.getMotor().getVelocity());
+            Logging.LOG("shooter power", outtake.getMotor().getPower());
             Logging.LOG("Spin Target", spinSimple.getSpinTargetPos());
             Logging.LOG("Spin Pos", spinSimple.getSpinCurrentPosition());
             Logging.LOG("Spin Status", spinSimple.getSpinMotor().isBusy());

@@ -13,6 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Drawing;
+import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction;
 import org.firstinspires.ftc.teamcode.opmodes.TeleOpHarry;
 import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
@@ -35,6 +36,7 @@ public class VisionDetection {
 
     }
 
+
     public void update(PinpointLocalizer localizer, TelemetryPacket packet) {
         iteration += 1;
 
@@ -54,16 +56,17 @@ public class VisionDetection {
             lastResult = result.getControlHubTimeStamp();
 
             List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-            for (LLResultTypes.FiducialResult fiducial : fiducials) {
-                int detectedID = fiducial.getFiducialId(); // The ID number of the fiducial
-                double Xoffset = fiducial.getTargetXDegrees(); // Where it is (left-right)
-                double Yoffset = fiducial.getTargetYDegrees(); // Where it is (up-down)
-                double Ydistance = fiducial.getRobotPoseTargetSpace().getPosition().y;
-                double Xdistance = fiducial.getRobotPoseTargetSpace().getPosition().x;
-                Pose3D tagRelativeCameraPose = fiducial.getCameraPoseTargetSpace(); // Camera pose relative to the AprilTag (useful)
-                Pose3D fieldRelativeBotPose = fiducial.getRobotPoseFieldSpace(); // Robot pose in the field coordinate system based on this tag alone (useful)
+            for (LLResultTypes.FiducialResult fr : fiducials) {
+                int detectedID = fr.getFiducialId(); // The ID number of the fiducial
+                double Xoffset = fr.getTargetXDegrees(); // Where it is (left-right)
+                double Yoffset = fr.getTargetYDegrees(); // Where it is (up-down)
+                double Ydistance = fr.getRobotPoseTargetSpace().getPosition().y;
+                double Xdistance = fr.getRobotPoseTargetSpace().getPosition().x;
+                Pose3D tagRelativeCameraPose = fr.getCameraPoseTargetSpace(); // Camera pose relative to the AprilTag (useful)
+                Pose3D fieldRelativeBotPose = fr.getRobotPoseFieldSpace(); // Robot pose in the field coordinate system based on this tag alone (useful)
                 Logging.LOG("Fiducial " + detectedID, "is " + Ydistance + " meters away");
             }
+
 
 
             // Access general information
