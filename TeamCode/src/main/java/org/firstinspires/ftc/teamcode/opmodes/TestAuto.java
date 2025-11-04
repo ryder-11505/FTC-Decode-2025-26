@@ -15,6 +15,7 @@ import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.lynx.LynxModule;
@@ -25,6 +26,9 @@ import com.userjhansen.automap.Maps.InsideOne;
 import com.userjhansen.automap.Maps.Map;
 import com.userjhansen.automap.Maps.OutsideOneForDoubleSpecimen;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 import org.firstinspires.ftc.teamcode.galahlib.actions.Loggable;
 import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction;
@@ -46,6 +50,7 @@ import java.util.logging.LoggingMXBean;
 @Autonomous(name = "Test Auto")
 @Config
 public class TestAuto extends LinearOpMode {
+    private GoBildaPinpointDriver pinpoint;
     public static TrajectoryActionBuilder addParts(TrajectoryActionBuilder traj, AutoPart[] parts) {
         for (AutoPart part : parts) {
             switch (part.type) {
@@ -123,44 +128,52 @@ public class TestAuto extends LinearOpMode {
         TurretSimple spinSimple = new TurretSimple(hardwareMap);
 
 
-        LLResult result = visionDetection.limelight.getLatestResult();
-        LLResultTypes.FiducialResult fr = (LLResultTypes.FiducialResult) result.getFiducialResults();
+//        LLResult result = visionDetection.limelight.getLatestResult();
+//        LLResultTypes.FiducialResult fr = (LLResultTypes.FiducialResult) result.getFiducialResults();
+//
+//        int tagId = fr.getFiducialId();
+//
+//        Motif motif = Motif.None;
+//
+//        if (result.isValid()){
+//            fr.getFiducialId();
+//            if (fr.getFiducialId() == 21){
+//                motif = Motif.GPP;
+//            } else if (fr.getFiducialId() == 22){
+//                motif = Motif.PGP;
+//            } else if (fr.getFiducialId() == 23){
+//                motif = Motif.PPG;
+//            }
+//            switch (motif) {
+//                case GPP:
+//                    // Go to corresponding group of artifacts on field
+//                    break;
+//                case PGP:
+//                    // Go to corresponding group of artifacts on field
+//                    break;
+//                case PPG:
+//                    // Go to corresponding group of artifacts on field
+//                    break;
+//            }
+//        } else {
+//            Logging.LOG("No Target Found");
+//        }
 
-        int tagId = fr.getFiducialId();
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
-        Motif motif = Motif.None;
 
-        if (result.isValid()){
-            fr.getFiducialId();
-            if (fr.getFiducialId() == 21){
-                motif = Motif.GPP;
-            } else if (fr.getFiducialId() == 22){
-                motif = Motif.PGP;
-            } else if (fr.getFiducialId() == 23){
-                motif = Motif.PPG;
-            }
-            switch (motif) {
-                case GPP:
-                    // Go to corresponding group of artifacts on field
-                    break;
-                case PGP:
-                    // Go to corresponding group of artifacts on field
-                    break;
-                case PPG:
-                    // Go to corresponding group of artifacts on field
-                    break;
-            }
-        } else {
-            Logging.LOG("No Target Found");
-        }
+        Pose2D pose = pinpoint.getPosition();
 
-        Pose2d pose = driveBase.localizer.getPose();
+//      set to ending auto pose
+        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
 
-        double X = pose.position.x;
 
-        double Y = pose.position.y;
 
-        double H = Math.toDegrees(pose.heading.toDouble());
+        double X = pose.getX(DistanceUnit.INCH);
+
+        double Y = pose.getY(DistanceUnit.INCH);
+
+        double H = Math.toDegrees(pose.getHeading(AngleUnit.DEGREES));
 
         double Dr = Math.sqrt(Math.pow((72 - Y), 2) + Math.pow((72 + X), 2));
 
@@ -172,13 +185,9 @@ public class TestAuto extends LinearOpMode {
 
         double Hm = Math.asin(((X + 72) / (Y + 72)) + H);
 
-        double a = (7.5 / 97) * (53);
+        double RSr = (-0.032) * Dr * Dr + 11.68 * Dr + 386.0;
 
-        double b = 22 - a;
-
-        double RSr = (7.5 / 97) * (Dr + 19) + b;
-
-        double RSb = (7.5 / 97) * (Db + 19) + b;
+        double RSb = (-0.032) * Db * Db + 11.68 * Db + 386.0;
 
         Logging.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -202,6 +211,7 @@ public class TestAuto extends LinearOpMode {
         while (!isStarted()) {
             p = new TelemetryPacket();
             driveBase.update(p);
+            pinpoint.update();
 
             if (gamepad1.a) innerPosition = true;
             else if (gamepad1.y) innerPosition = false;
@@ -247,7 +257,7 @@ public class TestAuto extends LinearOpMode {
                                 new Action() {
                                     @Override
                                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                                        outtake.shootSuperShort();
+                                        outtake.shootSuperShort3();
                                         return false;
                                     }
                                 }
@@ -291,8 +301,10 @@ public class TestAuto extends LinearOpMode {
             p = new TelemetryPacket();
 
             driveBase.update(p);
+            pinpoint.update();
 //            visionDetection.update(driveBase.localizer, p);
-            PoseStorage.currentPose = driveBase.localizer.getPose();
+//            PoseStorage.currentPose = driveBase.localizer.getPose();
+            PoseStorage.currentPose = pinpoint.getPosition();
 
             for (LynxModule module : allHubs) {
                 module.clearBulkCache();

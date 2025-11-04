@@ -36,6 +36,11 @@ import org.firstinspires.ftc.teamcode.subsystems.TurretSimple;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+
 @TeleOp(group = "advanced", name = "Teleop")
 @Config
 public class TeleOpHarry extends LinearOpMode {
@@ -66,6 +71,8 @@ public class TeleOpHarry extends LinearOpMode {
     private LoggableAction trackingAction = null;
     private boolean isScanning = false;
 
+    private GoBildaPinpointDriver pinpoint;
+
 
 
     @SuppressLint("DefaultLocale")
@@ -79,24 +86,24 @@ public class TeleOpHarry extends LinearOpMode {
 //        Turret turret = new Turret(hardwareMap);
         TurretSimple spinSimple = new TurretSimple(hardwareMap);
 
-//        LLResult result = visionDetection.limelight.getLatestResult();
-//        LLResultTypes.FiducialResult fr = (LLResultTypes.FiducialResult) result.getFiducialResults();
-//
-//        int tagId = fr.getFiducialId();
-
-        Pose2d pose = driveBase.localizer.getPose();
-
-
-//        turret.unlock();
-
         Button fieldMode = new Button();
         Button slowMode = new Button();
 
-        double X = pose.position.x;
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
-        double Y = pose.position.y;
 
-        double H = Math.toDegrees(pose.heading.toDouble());
+        Pose2D pose = pinpoint.getPosition();
+
+//      set to ending auto pose
+        pinpoint.setPosition(new Pose2D(DistanceUnit.INCH, 0, 0, AngleUnit.DEGREES, 0));
+
+
+
+        double X = pose.getX(DistanceUnit.INCH);
+
+        double Y = pose.getY(DistanceUnit.INCH);
+
+        double H = Math.toDegrees(pose.getHeading(AngleUnit.DEGREES));
 
         double Dr = Math.sqrt(Math.pow((72 - Y), 2) + Math.pow((72 + X), 2));
 
@@ -108,13 +115,9 @@ public class TeleOpHarry extends LinearOpMode {
 
         double Hm = Math.asin(((X + 72) / (Y + 72)) + H);
 
-        double a = (7.5 / 97) * (53);
+        double RSr = (-0.032) * Dr * Dr + 11.68 * Dr + 386.0;
 
-        double b = 22 - a;
-
-        double RSr = (7.5 / 97) * (Dr + 19) + b;
-
-        double RSb = (7.5 / 97) * (Db + 19) + b;
+        double RSb = (-0.032) * Db * Db + 11.68 * Db + 386.0;
 
         Logging.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
@@ -168,6 +171,7 @@ public class TeleOpHarry extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
             FtcDashboard.getInstance().sendTelemetryPacket(p);
+            driveBase.update(p);
 
 
             if (gamepad1.right_bumper) {
@@ -242,7 +246,7 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad1.x) {
 //                outtake.setPower(RS);
-                outtake.shootShort();
+                outtake.shootShort3();
                 Logging.LOG("x");
             }
 
@@ -251,7 +255,7 @@ public class TeleOpHarry extends LinearOpMode {
             }
 
             if (gamepad1.y) {
-                outtake.shootLong();
+                outtake.shootLong3();
                 Logging.LOG("y");
             }
 
@@ -270,7 +274,7 @@ public class TeleOpHarry extends LinearOpMode {
 
 
             if (gamepad1.b) {
-                outtake.shootSuperShort();
+                outtake.shootSuperShort3();
                 Logging.LOG("b");
             }
 
@@ -314,6 +318,11 @@ public class TeleOpHarry extends LinearOpMode {
             if (isScanning) {
                 Logging.LOG("SCAN_STATE", scanningAction != null ? "SCANNING" : "TRACKING");
             }
+            pinpoint.update();
+            pose = pinpoint.getPosition();
+            Logging.LOG("X coordinate (IN)", pose.getX(DistanceUnit.INCH));
+            Logging.LOG("Y coordinate (IN)", pose.getY(DistanceUnit.INCH));
+            Logging.LOG("Heading angle (DEGREES)", pose.getHeading(AngleUnit.DEGREES));
             Logging.LOG("shooter velocity (rad/s)", outtake.getMotor().getVelocity(AngleUnit.RADIANS));
             Logging.LOG("shooter velocity (ticks/s)", outtake.getMotor().getVelocity());
             Logging.LOG("shooter power", outtake.getMotor().getPower());
@@ -321,6 +330,9 @@ public class TeleOpHarry extends LinearOpMode {
             Logging.LOG("Spin Pos", spinSimple.getSpinCurrentPosition());
             Logging.LOG("Spin Status", spinSimple.getSpinMotor().isBusy());
             Logging.LOG("Spin Power", spinSimple.getSpinMotor().getPower());
+            Logging.LOG("X", X);
+            Logging.LOG("Y", Y);
+            Logging.LOG("H", H);
             Logging.LOG("CURRENT_TEAM", PoseStorage.isRedAlliance ? "RED" : "BLUE");
 //            Logging.LOG("SPLIT", PoseStorage.splitControls);
             Logging.LOG("FIELD_MODE", fieldMode.val);

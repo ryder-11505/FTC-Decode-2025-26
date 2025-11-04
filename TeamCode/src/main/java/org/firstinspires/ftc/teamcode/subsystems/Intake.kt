@@ -38,7 +38,7 @@ class Intake(hardwareMap: HardwareMap) : StateLoggable {
         var P_Intake: Double = 15.0
 
         @JvmField // Speed while intaking, if it is flying past lower this number
-        var speed = 1.0
+        var speed = 0.85
     }
 
     val motor = hardwareMap.get(DcMotorEx::class.java, "in")
