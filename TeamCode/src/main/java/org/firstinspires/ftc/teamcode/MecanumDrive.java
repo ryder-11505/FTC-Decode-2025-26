@@ -24,12 +24,14 @@ import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.TimeTurn;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Twist2dDual;
 import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.LazyHardwareMapImu;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.acmerobotics.roadrunner.ftc.LynxFirmware;
 import com.acmerobotics.roadrunner.ftc.PinpointIMU;
@@ -70,7 +72,7 @@ public final class MecanumDrive implements StateLoggable {
                 RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 0.0009664;
+        public double inPerTick = 0.0005312812;
         public double lateralInPerTick = 0.0004686145395153341;
         public double trackWidthTicks = 23271.67529708481;
 
@@ -112,12 +114,13 @@ public final class MecanumDrive implements StateLoggable {
             new ProfileAccelConstraint(PARAMS.minProfileAccel, PARAMS.maxProfileAccel);
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
     public final VoltageSensor voltageSensor;
-//    public final LazyImu lazyImu;
+    public final LazyImu lazyImu;
 
     public final PinpointLocalizer localizer;
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
     private final DownsampledWriter driveCommandWriter = new DownsampledWriter("DRIVE_COMMAND", 50_000_000);
     private final DownsampledWriter mecanumCommandWriter = new DownsampledWriter("MECANUM_COMMAND", 50_000_000);
+
     public MecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
 
@@ -144,8 +147,8 @@ public final class MecanumDrive implements StateLoggable {
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
-//        lazyImu = new LazyImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
-//                PARAMS.logoFacingDirection, PARAMS.usbFacingDirection);
+        lazyImu = new LazyHardwareMapImu(hardwareMap, "imu", new RevHubOrientationOnRobot(
+                PARAMS.logoFacingDirection, PARAMS.usbFacingDirection));
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
@@ -217,6 +220,19 @@ public final class MecanumDrive implements StateLoggable {
                 ),
                 beginPose, 0.0,
                 defaultTurnConstraints,
+                defaultVelConstraint, defaultAccelConstraint
+        );
+    }
+
+    public TrajectoryBuilder trajActionBuilder(Pose2d beginPose) {
+        return new TrajectoryBuilder(
+                new TrajectoryBuilderParams(
+                        1e-6,
+                        new ProfileParams(
+                                0.25, 0.1, 1e-2
+                        )
+                ),
+                beginPose, 0.0,
                 defaultVelConstraint, defaultAccelConstraint
         );
     }

@@ -5,20 +5,18 @@ import com.userjhansen.automap.AutoPart
 
 interface Map {
 
-    val highBasketPosition2: Pose2d
     val parkPosition: Pose2d
-    val highBasketPosition: Pose2d
-    val sampleCollectPosition: Pose2d
-    val specimenPosition2: Pose2d
-    val collectPosition: Pose2d
     val startPosition: Pose2d
+    val intakePos3: Pose2d
+    val intakePos2: Pose2d
+    val intakePos1: Pose2d
+    val shootPos2: Pose2d
+    val shootPos : Pose2d
 
 //    GAME SPECIFIC OPTIMISATION
-    val specimenPosition: Pose2d
-    val depositPosition: Pose2d
 
-    val intakeParts: Array<Array<AutoPart>>
-    val depositParts: Array<AutoPart>
+
+    val intakeParts: Array<AutoPart>
     val parkParts: Array<AutoPart>
-    val specimenParts: Array<AutoPart>
+    val shootParts: Array<AutoPart>
 }

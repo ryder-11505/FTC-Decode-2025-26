@@ -9,4 +9,6 @@ plugins {
 include ':FtcRobotController'
 include ':TeamCode'
 include ':MeepMeepVis'
+include ':MeepMeep'
 include ':automap'
+include ':MeepMeep'

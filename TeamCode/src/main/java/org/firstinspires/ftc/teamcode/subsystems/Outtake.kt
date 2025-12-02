@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction
 import org.firstinspires.ftc.teamcode.galahlib.actions.LoggingSequential
 import org.firstinspires.ftc.teamcode.galahlib.actions.Timeout
 import org.firstinspires.ftc.teamcode.staticData.Logging
+import org.firstinspires.ftc.teamcode.subsystems.TurretSimple.PARAMS
 import org.firstinspires.ftc.teamcode.subsystems.TurretSimple.PARAMS.ticksPerDegree
 
 @Config
@@ -25,7 +26,7 @@ class Outtake(hardwareMap: HardwareMap) : StateLoggable {
         var speedShort = ((22.0 * 10.0) / (2.0 * Math.PI)) * 28.0 // 1.0 power ≈ 628 rad/s ∴ rad/s = 628(power) or rad/s/62
 
         @JvmField
-        var speedLong = ((29.5 * 10.0) / (2.0 * Math.PI)) * 28.0 // 1.0 power ≈ 628 rad/s ∴ rad/s = 628(power) or rad/s/628 = power
+        var speedLong = 990.0 // 1.0 power ≈ 628 rad/s ∴ rad/s = 628(power) or rad/s/628 = power
 
         @JvmField
         var speed = 1300.0 // 1.0 power ≈ 628 rad/s ∴ rad/s = 628(power) or rad/s/628 = power
@@ -36,103 +37,74 @@ class Outtake(hardwareMap: HardwareMap) : StateLoggable {
         @JvmField
         var closed = 0.25
 
+
     }
 
     val motor = hardwareMap.get(DcMotorEx::class.java, "outL")
     val servo = hardwareMap.get(Servo::class.java, "servo")
-    val servo2 = hardwareMap.get(Servo::class.java, "servo2")
 
     init {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.FLOAT
         motor.mode = DcMotor.RunMode.RUN_USING_ENCODER
-        motor.setVelocityPIDFCoefficients(25.0,0.0,0.0,20.0)
+        motor.setVelocityPIDFCoefficients(34.0,0.0,0.0,20.0)
 //        motor.setVelocityPIDFCoefficients(1.17025,0.117025,0.0,11.7025)
         servo.position = closed
-        servo2.position = 1 - closed
     }
 
 
     fun open() {
         servo.position = open
-        servo2.position = 1 - open
     }
 
     fun close() {
         servo.position = closed
-        servo2.position = 1 - closed
-    }
-
-    fun shootSuperShort3() {
-        motor.setVelocity(speedSuperShort)
-//        if (IntRange(-20, 20).contains(((speedSuperShort).toInt()) - ((motor.velocity).toInt()))){
-//            servo.position = open
-//        } else {
-//            servo.position = closed
-//        }
-        if ((motor.velocity) < (speedSuperShort)) {
-            servo.position = closed
-            servo2.position = 1 - closed
-        } else {
-            servo.position = open
-            servo2.position = 1 - open
-        }
-
-    }
-
-    fun shootShort3() {
-        motor.setVelocity(speedShort)
-        if (IntRange(-20, 20).contains(((speedShort).toInt()) - ((motor.velocity).toInt()))){
-            servo.position = open
-            servo2.position = 1 - open
-        } else {
-            servo.position = closed
-            servo2.position = 1 - closed
-        }
-    }
-
-    fun shootLong3() {
-        motor.setVelocity(speedLong)
-        if (IntRange(-20, 20).contains(((speedLong).toInt()) - ((motor.velocity).toInt()))){
-            servo.position = open
-            servo2.position = 1 - open
-        } else {
-            servo.position = closed
-            servo2.position = 1 - closed
-        }
-    }
-
-    fun setPower3(RS: Double) {
-        val varSpeed = ((RS * 10.0) / (2.0 * Math.PI)) * 28.0
-        motor.setVelocity(varSpeed)
-        if (motor.velocity == varSpeed) {
-            servo.position = open
-            servo2.position = 1 - open
-        } else {
-            servo.position = closed
-            servo2.position = 1 - closed
-        }
     }
 
     fun shootSuperShort() {
-        motor.setVelocity(speed)
-        servo.position = open
+        motor.setVelocity(speedSuperShort)
+        if ((motor.velocity) < (speedSuperShort)) {
+            servo.position = closed
+        } else {
+            servo.position = open
+        }
+
     }
 
     fun shootShort() {
         motor.setVelocity(speedShort)
-        servo.position = open
+        if ((motor.velocity) < (speedShort)) {
+            servo.position = closed
+        } else {
+            servo.position = open
+        }
     }
 
     fun shootLong() {
         motor.setVelocity(speedLong)
-        servo.position = open
+        if ((motor.velocity) < (speedLong)) {
+            servo.position = closed
+        } else {
+            servo.position = open
+        }
+    }
+
+    fun setPower(RS: Double): Boolean {
+        motor.setVelocity(RS)
+        if ((motor.velocity) < (RS)) {
+            servo.position = closed
+            return false
+        } else {
+            servo.position = open
+            return true
+        }
     }
 
     fun stopShoot() {
         motor.setVelocity(0.0)
         servo.position = closed
-        servo2.position = 1 - closed
     }
+
+
 
     override fun logState(uniqueName: String?) {
         Logging.DEBUG("$uniqueName SHOOTER_POWER", motor.power)

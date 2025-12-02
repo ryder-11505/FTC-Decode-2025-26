@@ -62,13 +62,13 @@ public class AutoPart {
         ArrayList<AutoPart> parts = new ArrayList<>();
 
         parts.add(new AutoPart(PartType.CHANGE_LIGHT, 0));
-        parts.add(new AutoPart(PartType.STRAFE, map.getSpecimenPosition()));
+        parts.add(new AutoPart(PartType.STRAFE, map.getShootPos()));
         parts.add(new AutoPart(PartType.ACTION, 0));
 
-        for (AutoPart[] partList: map.getIntakeParts()) {
+        for (AutoPart partList: map.getIntakeParts()) {
             parts.addAll(Arrays.asList(partList));
             parts.add(new AutoPart(PartType.ACTION, 1));
-            parts.addAll(Arrays.asList(map.getDepositParts()));
+            parts.addAll(Arrays.asList(map.getShootParts()));
             parts.add(new AutoPart(PartType.ACTION, 2));
         }
 

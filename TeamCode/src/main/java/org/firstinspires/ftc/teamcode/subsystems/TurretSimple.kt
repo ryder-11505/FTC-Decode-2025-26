@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import com.qualcomm.robotcore.hardware.PIDFCoefficients
+import com.qualcomm.robotcore.hardware.Servo
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.robotcore.internal.system.Deadline
@@ -40,34 +41,27 @@ import kotlin.math.max
 class TurretSimple(hardwareMap: HardwareMap) : StateLoggable {
     companion object PARAMS {
 
-        @JvmField // Speed while intaking, if it is flying past lower this number
-        var speed = 1.0
+        @JvmField
+        var ticksPerDegree: Double = 144.0 / 45.0
 
-        // REV HD Hex Motor = 28 CPR, 20:1 gear ratio
         private const val encoderCPR = 28.0
-        private const val gearRatio = 15.0
-        private const val ticksPerRev = encoderCPR * gearRatio
-        @JvmField
-        var ticksPerDegree: Double = ticksPerRev / 360.0  // ≈ 1.56 ticks/degree
-
-        // Mechanical limits (adjust to your turret’s safe travel)
-        @JvmField
-        val SPIN_MIN = -(28.85 * ticksPerDegree)   // ≈ -45     // we want it to be - 90
+        private var gearRatio = (ticksPerDegree * 360.0) / encoderCPR // ≈ 41.2380952381
 
         @JvmField
-        val SPIN_MAX = (28.85 * ticksPerDegree)   // ≈ +45      // we want it to be +380
+        var P = 19.0
 
         @JvmField
-        var P = 16.0
+        var I = 0.1
 
         @JvmField
-        var I = 0.0
+        var D = 12.0
 
         @JvmField
-        var D = 0.0
+        var F = 0.0
     }
 
     val spinMotor = hardwareMap.get(DcMotorEx::class.java, "spin")
+    val servo = hardwareMap.get(Servo::class.java, "servo2")
 
     val spinCurrentPosition get() = spinMotor.currentPosition
     val spinTargetPos get() = spinMotor.targetPosition
@@ -84,20 +78,37 @@ class TurretSimple(hardwareMap: HardwareMap) : StateLoggable {
         initMotor()
         spinMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         spinMotor.setPositionPIDFCoefficients(P)
-        spinMotor.setVelocityPIDFCoefficients(P, I, D, 0.0)
+        spinMotor.setVelocityPIDFCoefficients(P, I, D, F)
         spinMotor.direction = DcMotorSimple.Direction.FORWARD
+        servo.position = 0.50
     }
 
     fun track(degrees: Double) {
-        spinMotor.targetPosition = ((degrees * ticksPerDegree).toInt())
+        var safeDegrees = degrees
+        if (degrees > 180) {
+            safeDegrees = degrees - 360
+        } else if (degrees < -180) {
+            safeDegrees = 360 - degrees
+        } else if (IntRange(-180, 180).contains(degrees.toInt())) {
+            safeDegrees = degrees
+        }
+        val targetPosition = ((safeDegrees * ticksPerDegree).toInt())
+        spinMotor.targetPosition = targetPosition
         spinMotor.mode = DcMotor.RunMode.RUN_TO_POSITION
         spinMotor.power = 1.0
-        if (abs(((degrees * ticksPerDegree).toInt()) - ((degrees * ticksPerDegree).toInt())) < spinMotor.targetPositionTolerance && abs(((degrees * ticksPerDegree).toInt()) - spinCurrentPosition) < spinMotor.targetPositionTolerance && spinMotor.isBusy) {
+        if (abs(((safeDegrees * ticksPerDegree).toInt()) - ((safeDegrees * ticksPerDegree).toInt())) < spinMotor.targetPositionTolerance && abs(((safeDegrees * ticksPerDegree).toInt()) - spinCurrentPosition) < spinMotor.targetPositionTolerance) {
+            spinMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
             spinMotor.power = 0.0
         }
-        if (IntRange(-2, 2).contains(((degrees * ticksPerDegree).toInt()) - spinCurrentPosition)){
+        if (IntRange(-1, 1).contains(((safeDegrees * ticksPerDegree).toInt()) - spinCurrentPosition)){
+            spinMotor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
             spinMotor.power = 0.0
         }
+    }
+
+    fun hoodAngle(angle: Double) {
+        val position = 0.0333333 * angle - 0.333333
+        servo.position = position
     }
 
     fun resetEncoder() {

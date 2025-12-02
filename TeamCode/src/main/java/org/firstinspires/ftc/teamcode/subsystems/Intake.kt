@@ -1,35 +1,18 @@
 package org.firstinspires.ftc.teamcode.subsystems
 
 import com.acmerobotics.dashboard.config.Config
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket
-import com.acmerobotics.roadrunner.InstantAction
-import com.acmerobotics.roadrunner.ParallelAction
+import com.acmerobotics.roadrunner.Action
 import com.acmerobotics.roadrunner.SequentialAction
 import com.acmerobotics.roadrunner.SleepAction
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver
-import com.qualcomm.hardware.rev.RevColorSensorV3
+import com.acmerobotics.roadrunner.Time
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
-import com.qualcomm.robotcore.hardware.DcMotorSimple
 import com.qualcomm.robotcore.hardware.HardwareMap
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
-import org.firstinspires.ftc.robotcore.internal.system.Deadline
 import org.firstinspires.ftc.teamcode.galahlib.StateLoggable
-import org.firstinspires.ftc.teamcode.galahlib.actions.Loggable
-import org.firstinspires.ftc.teamcode.galahlib.actions.LoggableAction
-import org.firstinspires.ftc.teamcode.galahlib.actions.LoggingSequential
-import org.firstinspires.ftc.teamcode.galahlib.actions.race
-import org.firstinspires.ftc.teamcode.galahlib.mechanisms.ContinuousServo
+import org.firstinspires.ftc.teamcode.galahlib.actions.Timeout
 import org.firstinspires.ftc.teamcode.galahlib.mechanisms.DigitalInput
-import org.firstinspires.ftc.teamcode.galahlib.mechanisms.Lift
-import org.firstinspires.ftc.teamcode.galahlib.mechanisms.ServoToggle
-import org.firstinspires.ftc.teamcode.messages.ColorMessage
 import org.firstinspires.ftc.teamcode.staticData.Logging
-import org.firstinspires.ftc.teamcode.staticData.PoseStorage
-import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 @Config
 class Intake(hardwareMap: HardwareMap) : StateLoggable {
@@ -44,9 +27,17 @@ class Intake(hardwareMap: HardwareMap) : StateLoggable {
     val motor = hardwareMap.get(DcMotorEx::class.java, "in")
     val motor2 = hardwareMap.get(DcMotorEx::class.java, "in2")
 
+    // ball1 is the first ball to be intaked and closest to the shooter, ball2 is in the middle,
+    // and ball3 is the most recently intaked and closest to the intake
+    val ball1 = DigitalInput(hardwareMap, "ball1")
+    val ball2 = DigitalInput(hardwareMap, "ball2")
+    val ball3 = DigitalInput(hardwareMap, "ball3")
+
     init {
         motor.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         motor2.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        motor.setCurrentAlert(4.5, CurrentUnit.AMPS)
+        motor2.setCurrentAlert(4.5, CurrentUnit.AMPS)
     }
 
 
@@ -63,6 +54,23 @@ class Intake(hardwareMap: HardwareMap) : StateLoggable {
     fun stopIntake() {
         motor.power = 0.0
         motor2.power = 0.0
+    }
+
+
+    fun isIntakeFull(): Boolean {
+        if (ball1.triggered && ball2.triggered && ball3.triggered) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    fun isIntakeEmpty(): Boolean {
+        if (!ball1.triggered && !ball2.triggered && !ball3.triggered) {
+            return true
+        } else {
+            return false
+        }
     }
 
     override fun logState(uniqueName: String?) {

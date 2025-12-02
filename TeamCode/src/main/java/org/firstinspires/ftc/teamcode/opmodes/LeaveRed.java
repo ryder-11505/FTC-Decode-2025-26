@@ -1,18 +1,13 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import androidx.annotation.NonNull;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.InstantAction;
-import com.acmerobotics.roadrunner.InstantFunction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -21,15 +16,13 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.userjhansen.automap.AutoPart;
-import com.userjhansen.automap.Maps.InsideOneBlue;
+import com.userjhansen.automap.Maps.InsideLeaveRed;
 import com.userjhansen.automap.Maps.InsideOneRed;
 import com.userjhansen.automap.Maps.Map;
-import com.userjhansen.automap.Maps.OutsideOneBlue;
+import com.userjhansen.automap.Maps.OutsideLeaveRed;
 import com.userjhansen.automap.Maps.OutsideOneRed;
 
-import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
-import org.firstinspires.ftc.teamcode.galahlib.actions.Timeout;
 import org.firstinspires.ftc.teamcode.localization.VisionDetection;
 import org.firstinspires.ftc.teamcode.staticData.Logging;
 import org.firstinspires.ftc.teamcode.staticData.PoseStorage;
@@ -41,12 +34,12 @@ import org.firstinspires.ftc.teamcode.subsystems.TurretSimple;
 //import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-@Autonomous(name = "Test Auto Test")
+@Autonomous(name = "LeaveRed")
 @Config
-public class TestAuto extends LinearOpMode {
+public class LeaveRed extends LinearOpMode {
     private GoBildaPinpointDriver pinpoint;
+
     public static TrajectoryActionBuilder addParts(TrajectoryActionBuilder traj, AutoPart[] parts) {
         for (AutoPart part : parts) {
             switch (part.type) {
@@ -57,7 +50,7 @@ public class TestAuto extends LinearOpMode {
                     traj = traj.strafeToLinearHeading(part.getPose().position, part.getPose().heading);
                     break;
                 case TURN:
-                    traj = traj.turn(part.value+0.00001);
+                    traj = traj.turn(part.value + 0.00001);
                     break;
                 case WAIT:
                     traj = traj.waitSeconds(part.value);
@@ -181,7 +174,6 @@ public class TestAuto extends LinearOpMode {
         }
 
 
-
         boolean innerPosition = false;
         while (!isStarted()) {
             p = new TelemetryPacket();
@@ -222,13 +214,17 @@ public class TestAuto extends LinearOpMode {
 
         double Db = Math.sqrt(((-72.0 - Y) * (-72.0 - Y)) + ((72.0 + X) * (72.0 + X)));
 
-        double Hr2 = Math.atan2((72.0 + X), (72.0 - Y)) + Math.toRadians(90.0) - H;
+        double Hr3 = Math.atan((72.0 + X) / (72.0 - Y)) - H;
 
-        double Hb2 = Math.atan2((72.0 + X), (-72.0 - Y)) + Math.toRadians(90.0) - H;
+        double Hb3 = Math.atan((72.0 + X) / (-72.0 - Y)) + Math.toRadians(180.0) - H;
 
-        double Hr = Math.acos((72.0 - Y) / Dr) + Math.toRadians(90.0) - H;
+        double Hr2 = Math.atan2((72.0 + X), (72.0 - Y)) - H;
 
-        double Hb = Math.acos((-72.0 - Y) / Db) - Math.toRadians(270.0) - H;
+        double Hb2 = Math.atan2((72.0 + X), (-72.0 - Y)) + Math.toRadians(180.0) - H;
+
+        double Hr = Math.acos((72.0 - Y) / Dr) - H;
+
+        double Hb = Math.acos((-72.0 - Y) / Db) - H;
 
         double Hm = 90.0 - H;
 
@@ -236,55 +232,30 @@ public class TestAuto extends LinearOpMode {
 
         double RSb = (-0.032) * Db * Db + 11.68 * Db + 386.0;
 
-        Map map = innerPosition ? new InsideOneRed() : new OutsideOneRed();
+        Map map = innerPosition ? new InsideLeaveRed() : new OutsideLeaveRed();
 
-//        driveBase.localizer.setPose(PoseStorage.isRedAlliance
-//                ? map.getStartPosition()
-//                : new Pose2d(
-//                map.getStartPosition().position.x,
-//                -map.getStartPosition().position.y,
-//                map.getStartPosition().heading.plus(Math.PI).toDouble()));
+        driveBase.localizer.setPose(PoseStorage.isRedAlliance
+                ? map.getStartPosition()
+                : new Pose2d(
+                map.getStartPosition().position.x,
+                -map.getStartPosition().position.y,
+                map.getStartPosition().heading.plus(Math.PI).toDouble()));
 
-        driveBase.localizer.setPose(map.getStartPosition());
+//        driveBase.localizer.setPose(map.getStartPosition());
 
-        TrajectoryActionBuilder wholeTrajectory = driveBase.actionBuilder(map.getStartPosition()) // put initial pose here
+        // make sure to stop all actions
+
+        TrajectoryActionBuilder wholeTrajectory = driveBase.allianceActionBuilder(map.getStartPosition()) // put initial pose here
                 .waitSeconds(1)
-                .strafeToConstantHeading(new Vector2d(-34.3, 20.2))
-                .stopAndAdd(() -> {
-
-                    outtake.setPower(1000);
-
-                }).waitSeconds(5)
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-                    outtake.open();
-
-                }).waitSeconds(5)
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-                    outtake.stopShoot();
-                    spinSimple.track(0.0);
-
-                })
-                .strafeToConstantHeading(new Vector2d(-32.3, 20.2))
+                .strafeToConstantHeading(new Vector2d(33.9, 25))
                 .endTrajectory();
 
         waitForStart();
 
-        Action autonomous = wholeTrajectory.build();
-
         Actions.runBlocking(
                 new SequentialAction(
-                        autonomous
+                        wholeTrajectory.build()
                 )
         );
-
-        while (opModeIsActive() && !isStopRequested() && autonomous.run(p)) {
-            p = new TelemetryPacket();
-            driveBase.update(p);
-            PoseStorage.currentPose = driveBase.localizer.getPose();
-        }
     }
 }

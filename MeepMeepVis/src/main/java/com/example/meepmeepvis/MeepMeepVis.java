@@ -3,12 +3,17 @@ package com.example.meepmeepvis;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2dDual;
 import com.acmerobotics.roadrunner.ProfileParams;
+import com.acmerobotics.roadrunner.Rotation2d;
+import com.acmerobotics.roadrunner.Trajectory;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.core.colorscheme.scheme.ColorSchemeBlueDark;
+import com.noahbres.meepmeep.core.colorscheme.scheme.ColorSchemeBlueLight;
 import com.noahbres.meepmeep.core.colorscheme.scheme.ColorSchemeRedDark;
+import com.noahbres.meepmeep.core.colorscheme.scheme.ColorSchemeRedLight;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.DriveShim;
 import com.noahbres.meepmeep.roadrunner.DriveTrainType;
@@ -17,9 +22,11 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 import com.noahbres.meepmeep.roadrunner.entity.TrajectoryActionStub;
 import com.noahbres.meepmeep.roadrunner.entity.TurnActionStub;
 import com.userjhansen.automap.AutoPart;
-import com.userjhansen.automap.Maps.InsideOne;
+import com.userjhansen.automap.Maps.InsideOneBlue;
+import com.userjhansen.automap.Maps.InsideOneRed;
 import com.userjhansen.automap.Maps.Map;
-import com.userjhansen.automap.Maps.OutsideOne;
+import com.userjhansen.automap.Maps.OutsideOneBlue;
+import com.userjhansen.automap.Maps.OutsideOneRed;
 
 public class MeepMeepVis {
 
@@ -83,39 +90,91 @@ public class MeepMeepVis {
 
     public static void main(String[] args) {
         MeepMeep meepMeep = new MeepMeep(800);
+        boolean isRed = false;
+        boolean innerPosition = false;
 
-        meepMeep.setBackground(MeepMeep.Background.FIELD_INTO_THE_DEEP_JUICE_DARK)
+        RoadRunnerBotEntity bot = new DefaultBotBuilder(meepMeep)
+                .setDimensions(12.0, 18.0)
+                .setDriveTrainType(DriveTrainType.MECANUM)
+                .setColorScheme(isRed ? new ColorSchemeRedDark() : new ColorSchemeBlueDark())
+                // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
+                .setConstraints(39.4224324932042, 39.4224324932042, Math.toRadians(143.385), Math.toRadians(163.67673913043478), 12)
+                .build();
+
+
+        RoadRunnerBotEntity bot2 = new DefaultBotBuilder(meepMeep)
+                .setDimensions(12.0, 18.0)
+                .setDriveTrainType(DriveTrainType.MECANUM)
+                .setColorScheme(!isRed ? new ColorSchemeRedDark() : new ColorSchemeBlueDark())
+                // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
+                .setConstraints(39.4224324932042, 39.4224324932042, Math.toRadians(143.385), Math.toRadians(163.67673913043478), 12)
+                .build();
+
+        Map mapR = innerPosition ? new InsideOneRed() : new OutsideOneRed();
+
+        Map mapB = innerPosition ? new InsideOneBlue() : new OutsideOneBlue();
+
+        Action blueTraj = bot.getDrive().actionBuilder(mapB.getStartPosition())
+                .waitSeconds(5)
+                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.75, -27.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.75, -50.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
+                .build();
+
+
+        Action redTraj = bot.getDrive().actionBuilder(mapR.getStartPosition())
+                .waitSeconds(5)
+                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, 27.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, 50.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
+                .build();
+
+        bot.runAction(isRed ? redTraj : blueTraj);
+
+        Map mapR2 = !innerPosition ? new InsideOneRed() : new OutsideOneRed();
+
+        Map mapB2 = !innerPosition ? new InsideOneBlue() : new OutsideOneBlue();
+
+        Action blueTraj2 = bot2.getDrive().actionBuilder(mapB2.getStartPosition())
+                .waitSeconds(5)
+                .strafeToLinearHeading(new Vector2d(-64.0, -34.5), new Rotation2d(Math.toRadians(0.0), Math.toRadians(270.0)))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, -27.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, -50.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
+                .build();
+
+
+        Action redTraj2 = bot2.getDrive().actionBuilder(mapR2.getStartPosition())
+                .waitSeconds(5)
+                .strafeToLinearHeading(new Vector2d(-64.0, 34.5), new Rotation2d(Math.toRadians(0.0), Math.toRadians(90.0)))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, 27.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, 50.0))
+                .waitSeconds(2.5)
+                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
+                .build();
+
+        bot2.runAction(!isRed ? redTraj2 : blueTraj2);
+
+        meepMeep.setBackground(MeepMeep.Background.FIELD_DECODE_JUICE_DARK)
                 .setDarkMode(true)
-                .setBackgroundAlpha(0.95f);
+                .setBackgroundAlpha(0.95f)
+                .addEntity(bot)
+                .addEntity(bot2)
+                .start();
 
-        boolean loopIsRed = true;
-        do {
-            boolean isRed = loopIsRed;
 
-            RoadRunnerBotEntity bot = new DefaultBotBuilder(meepMeep)
-                    .setDimensions(16.25, 17.5)
-                    .setDriveTrainType(DriveTrainType.MECANUM)
-                    .setColorScheme(isRed ? new ColorSchemeRedDark() : new ColorSchemeBlueDark())
-                    // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                    .setConstraints(39.4224324932042, 39.4224324932042, Math.toRadians(143.385), Math.toRadians(163.67673913043478), 12)
-                    .build();
-            Action action = buildTrajectorySequence(bot.getDrive(), new OutsideOne(), isRed);
-            bot.runAction(action);
-            meepMeep.addEntity(bot);
-
-            bot = new DefaultBotBuilder(meepMeep)
-                    .setDimensions(16.25, 17.5)
-                    .setDriveTrainType(DriveTrainType.MECANUM)
-                    .setColorScheme(isRed ? new ColorSchemeRedDark() : new ColorSchemeBlueDark())
-                    // Set bot constraints: maxVel, maxAccel, maxAngVel, maxAngAccel, track width
-                    .setConstraints(55.784526, 60, Math.toRadians(143.385), Math.toRadians(163.67673913043478), 12)
-                    .build();
-            bot.runAction(buildTrajectorySequence(bot.getDrive(), new InsideOne(), isRed));
-            meepMeep.addEntity(bot);
-
-            loopIsRed = !loopIsRed;
-        } while (!loopIsRed);
-
-        meepMeep.start();
     }
 }
