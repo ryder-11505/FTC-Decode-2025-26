@@ -224,19 +224,6 @@ public final class MecanumDrive implements StateLoggable {
         );
     }
 
-    public TrajectoryBuilder trajActionBuilder(Pose2d beginPose) {
-        return new TrajectoryBuilder(
-                new TrajectoryBuilderParams(
-                        1e-6,
-                        new ProfileParams(
-                                0.25, 0.1, 1e-2
-                        )
-                ),
-                beginPose, 0.0,
-                defaultVelConstraint, defaultAccelConstraint
-        );
-    }
-
     public TrajectoryActionBuilder allianceActionBuilder(Pose2d beginPose) {
         return new TrajectoryActionBuilder(
                 TurnAction::new,

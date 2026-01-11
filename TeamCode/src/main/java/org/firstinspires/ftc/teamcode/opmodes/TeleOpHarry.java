@@ -12,6 +12,7 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -41,6 +42,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -117,7 +120,7 @@ public class TeleOpHarry extends LinearOpMode {
                 new Action() {
                     @Override
                     public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                        spinSimple.track(0.0);
+                        spinSimple.track(0.0, 0.0);
                         return false;
                     }
                 }
@@ -127,9 +130,13 @@ public class TeleOpHarry extends LinearOpMode {
 
         FinishingState finishState = FinishingState.Outtake;
 
+        double angle = 25.0;
+
+        double offset = 0.0;
 
         PoseStorage.isInit = false;
         Deadline matchTimer = new Deadline(2, TimeUnit.MINUTES);
+        Deadline transferTimer = new Deadline(500, TimeUnit.MILLISECONDS);
         while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
             FtcDashboard.getInstance().sendTelemetryPacket(p);
@@ -154,46 +161,74 @@ public class TeleOpHarry extends LinearOpMode {
 
             double Hb2 = (- H) + Math.acos((72.0 + X) / Db);
 
-            double RSr = (-0.032) * Dr * Dr + 11.68 * Dr + 386.0;
+            double HAr = 0.190808 * Dr + 6.7288;
 
-            double RSb = (-0.032) * Db * Db + 11.68 * Db + 386.0;
+            double HAb = 0.190808 * Dr + 6.7288;
 
-            double HAr = 0.229008 * Dr + 5.64885;
+//            double HAb = 0.190808 * Db + 6.7288;
 
-            double HAb = 0.229008 * Db + 5.64885;
+//            double HAr = -0.00548148 * Dr * Dr + 1.30889 * Dr - 29.0963;
+//
+//            double HAb = -0.00548148 * Db * Db + 1.30889 * Db - 29.0963;
 
             double VSr = 0.0;
 
             double VSb = 0.0;
 
+
             if (Dr <= 55.0) {
-                VSr = 990.0;
+                VSr = 1010.0;
             } else if (55.0 < Dr && Dr <= 75.0) {
-                VSr = 1060.0;
+                VSr = 1140.0;
             } else if (75.0 < Dr && Dr <= 105.0) {
-                VSr = 1120.0;
-            } else if (105.0 < Dr && Dr <= 120.0) {
                 VSr = 1200.0;
-            } else if (120.0 < Dr && Dr <= 140.0) {
-                VSr = 1260.0;
+            } else if (105.0 < Dr && Dr <= 120.0) {
+                VSr = 1240.0;
+            } else if (120.0 < Dr && Dr <= 130.0) {
+                VSr = 1280.0;
+            } else if (130.0 < Dr && Dr <= 140.0) {
+                VSr = 1320.0;
             } else if (140.0 < Dr && Dr <= 160.0) {
-                VSr = 1300.0;
+                VSr = 1340.0;
+            } else if (160.0 < Dr && Dr <= 171.0) {
+                VSr = 1380.0;
             }
 
             if (Db <= 55.0) {
-                VSb = 990.0;
+                VSb = 1030.0;
             } else if (55.0 < Db && Db <= 75.0) {
-                VSb = 1060.0;
+                VSb = 1140.0;
             } else if (75.0 < Db && Db <= 105.0) {
-                VSb = 1120.0;
-            } else if (105.0 < Db && Db <= 120.0) {
                 VSb = 1200.0;
-            } else if (120.0 < Db && Db <= 140.0) {
-                VSb = 1260.0;
+            } else if (105.0 < Db && Db <= 120.0) {
+                VSb = 1240.0;
+            } else if (120.0 < Db && Db <= 130.0) {
+                VSb = 1280.0;
+            } else if (130.0 < Db && Db <= 140.0) {
+                VSb = 1320.0;
             } else if (140.0 < Db && Db <= 160.0) {
-                VSb = 1300.0;
+                VSb = 1340.0;
+            } else if (160.0 < Db && Db <= 171.0) {
+                VSb = 1380.0;
             }
 
+//            if (Db <= 55.0) {
+//                VSb = 1010.0;
+//            } else if (55.0 < Db && Db <= 75.0) {
+//                VSb = 1080.0;
+//            } else if (75.0 < Db && Db <= 105.0) {
+//                VSb = 1120.0;
+//            } else if (105.0 < Db && Db <= 120.0) {
+//                VSb = 1180.0;
+//            } else if (120.0 < Db && Db <= 130.0) {
+//                VSb = 1220.0;
+//            } else if (130.0 < Db && Db <= 140.0) {
+//                VSb = 1280.0;
+//            } else if (140.0 < Db && Db <= 160.0) {
+//                VSb = 1320.0;
+//            } else if (160.0 < Db && Db <= 171.0) {
+//                VSb = 1340.0;
+//            }
 
 
             if (gamepad2.b && PoseStorage.isRedAlliance) {
@@ -209,37 +244,53 @@ public class TeleOpHarry extends LinearOpMode {
             }
 
             if (gamepad2.right_bumper && PoseStorage.isRedAlliance) {
-                spinSimple.track(Math.toDegrees(Hr2));
+                if (gamepad2.dpadLeftWasPressed()) {
+                    offset += 2.0;
+                } else if (gamepad2.dpadRightWasPressed()) {
+                    offset -= 2.0;
+                }
+                spinSimple.track(Math.toDegrees(Hr2), offset);
                 spinSimple.hoodAngle(HAr);
             } else if (gamepad2.right_bumper && !PoseStorage.isRedAlliance) {
-                spinSimple.track(Math.toDegrees(Hb2));
+                if (gamepad2.dpadLeftWasPressed()) {
+                    offset += 2.0;
+                } else if (gamepad2.dpadRightWasPressed()) {
+                    offset -= 2.0;
+                }
+                spinSimple.track(Math.toDegrees(Hb2), offset);
                 spinSimple.hoodAngle(HAb);
             }
 
             if (gamepad2.rightBumperWasReleased()) {
-                spinSimple.track(0.0);
+                spinSimple.track(0.0, 0.0);
                 spinSimple.hoodAngle(10.0);
+                offset = 0.0;
             }
 
-            if (gamepad2.dpad_up) {
-                spinSimple.hoodAngle(40.0);
-                Logging.LOG("servo up");
-            }
 
-            if (gamepad2.dpadUpWasReleased()) {
-                spinSimple.hoodAngle(25.0);
-                Logging.LOG("servo mid");
-            }
 
-            if (gamepad2.dpad_down) {
-                spinSimple.hoodAngle(10.0);
-                Logging.LOG("servo down");
-            }
 
-            if (gamepad2.dpadDownWasReleased()) {
-                spinSimple.hoodAngle(25.0);
-                Logging.LOG("servo mid");
-            }
+
+//            if (gamepad2.dpadUpWasPressed()) {
+//                spinSimple.hoodAngle(angle += 1.0);
+//                Logging.LOG("servo up");
+//            }
+
+//            if (gamepad2.dpadUpWasReleased()) {
+//                spinSimple.hoodAngle(25.0);
+//                Logging.LOG("servo mid");
+//            }
+
+//            if (gamepad2.dpadDownWasPressed()) {
+//                spinSimple.hoodAngle(angle -= 1.0);
+//                Logging.LOG("servo down");
+//            }
+
+//            if (gamepad2.dpadDownWasReleased()) {
+//                spinSimple.hoodAngle(25.0);
+//                Logging.LOG("servo mid");
+//            }
+
 
 
 //            if (gamepad2.back) {
@@ -256,13 +307,11 @@ public class TeleOpHarry extends LinearOpMode {
             PoseStorage.shouldHallucinate = (PoseStorage.splitControls ? gamepad2 : gamepad1).guide;
 
 
-//            if (gamepad2.b) {
-//                PoseStorage.isRedAlliance = true; // Tag ID 24
-//                targetId = 24;
-//            } else if (gamepad2.x) {
-//                PoseStorage.isRedAlliance = false; // Tag ID 20
-//                targetId = 20;
-//            }
+            if (gamepad1.right_bumper) {
+                PoseStorage.isRedAlliance = true; // Tag ID 24
+            } else if (gamepad1.left_bumper) {
+                PoseStorage.isRedAlliance = false; // Tag ID 20
+            }
 
 //            slowMode.update(gamepad1.y);
 //            fieldMode.update(gamepad1.x);
@@ -273,39 +322,33 @@ public class TeleOpHarry extends LinearOpMode {
 
             if (gamepad2.x) {
                 intake.outake();
+                outtake.runServoBackwards();
                 Logging.LOG("x");
             }
 
             if (gamepad2.xWasReleased()) {
                 intake.stopIntake();
+                outtake.stopServo();
             }
 
             if (gamepad2.y) {
-                outtake.shootLong();
+                outtake.runServoBackwards();
                 Logging.LOG("y");
             }
 
             if (gamepad2.yWasReleased()) {
-                outtake.stopShoot();
+                outtake.stopServo();
             }
 
-            if (gamepad1.a) {
+            if (gamepad1.a || gamepad2.a) {
                 intake.intake();
                 Logging.LOG("a");
             }
 
-            if (gamepad1.aWasReleased()) {
+            if (gamepad1.aWasReleased() || gamepad2.aWasReleased()) {
                 intake.stopIntake();
             }
 
-            if (gamepad2.a) {
-                intake.intake();
-                Logging.LOG("a");
-            }
-
-            if (gamepad2.aWasReleased()) {
-                intake.stopIntake();
-            }
 
             if (gamepad2.left_bumper) {
                 outtake.open();
@@ -357,6 +400,9 @@ public class TeleOpHarry extends LinearOpMode {
 //            Logging.LOG("X coordinate (IN)T", pose.getX(DistanceUnit.INCH));
 //            Logging.LOG("Y coordinate (IN)T", pose.getY(DistanceUnit.INCH));
 //            Logging.LOG("Heading angle (DEGREES)T", pose.getHeading(AngleUnit.DEGREES));
+            Logging.LOG("angle", angle);
+            Logging.LOG("speed", VSb);
+            Logging.LOG("timer", transferTimer.timeRemaining(TimeUnit.MILLISECONDS));
             Logging.LOG("servo angle", spinSimple.getServo().getPosition());
             Logging.LOG("Blue angle (deg)", Math.toDegrees(Hb2));
             Logging.LOG("Red angle (deg)", Math.toDegrees(Hr2));

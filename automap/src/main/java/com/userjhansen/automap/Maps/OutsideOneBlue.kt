@@ -6,7 +6,7 @@ import com.userjhansen.automap.PartType
 
 
 class OutsideOneBlue : Map {
-    override val startPosition = Pose2d(-64.0, -36.0, Math.toRadians(270.0))
+    override val startPosition = Pose2d(-64.0, 36.0, Math.toRadians(270.0))
 
 //    override val shootPos = Pose2d(-7.3, -4.7, 135.2 * Math.PI / 180)
     override val shootPos = Pose2d(-26.3, -19.1, 140.9 * Math.PI / 180)

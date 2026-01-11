@@ -42,19 +42,19 @@ class TurretSimple(hardwareMap: HardwareMap) : StateLoggable {
     companion object PARAMS {
 
         @JvmField
-        var ticksPerDegree: Double = 144.0 / 45.0
+        var ticksPerDegree: Double = 3.5
 
         private const val encoderCPR = 28.0
         private var gearRatio = (ticksPerDegree * 360.0) / encoderCPR // ≈ 41.2380952381
 
         @JvmField
-        var P = 19.0
+        var P = 25.0
 
         @JvmField
-        var I = 0.1
+        var I = 0.0
 
         @JvmField
-        var D = 12.0
+        var D = 7.0
 
         @JvmField
         var F = 0.0
@@ -83,14 +83,15 @@ class TurretSimple(hardwareMap: HardwareMap) : StateLoggable {
         servo.position = 0.50
     }
 
-    fun track(degrees: Double) {
-        var safeDegrees = degrees
-        if (degrees > 180) {
-            safeDegrees = degrees - 360
-        } else if (degrees < -180) {
-            safeDegrees = 360 - degrees
+    fun track(degrees: Double, offset: Double) {
+        val degreesWithOffset = degrees + offset
+        var safeDegrees = degreesWithOffset
+        if (degreesWithOffset > 180) {
+            safeDegrees = degreesWithOffset - 360
+        } else if (degreesWithOffset < -180) {
+            safeDegrees = 360 - degreesWithOffset
         } else if (IntRange(-180, 180).contains(degrees.toInt())) {
-            safeDegrees = degrees
+            safeDegrees = degreesWithOffset
         }
         val targetPosition = ((safeDegrees * ticksPerDegree).toInt())
         spinMotor.targetPosition = targetPosition

@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import static org.firstinspires.ftc.teamcode.subsystems.Outtake.closed;
+import static org.firstinspires.ftc.teamcode.subsystems.Outtake.open;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -139,7 +142,7 @@ public class TestAutoBlue extends LinearOpMode {
         ));
 
 //        Run initialisation tasks
-        visionDetection.limelight.start();
+//        visionDetection.limelight.start();
         TelemetryPacket p = new TelemetryPacket();
         while (!isStarted() && initAction.run(p)) {
             FtcDashboard.getInstance().sendTelemetryPacket(p);
@@ -151,12 +154,16 @@ public class TestAutoBlue extends LinearOpMode {
 
         boolean innerPosition = false;
         boolean isRed = false;
+        boolean sixBall = false;
         while (!isStarted()) {
             p = new TelemetryPacket();
             driveBase.update(p);
 
             if (gamepad1.a) innerPosition = true;
             else if (gamepad1.y) innerPosition = false;
+
+            if (gamepad2.a) sixBall = true;
+            else if (gamepad2.y) sixBall = false;
 
             if (gamepad1.b) {
                 PoseStorage.isRedAlliance = true;
@@ -169,6 +176,7 @@ public class TestAutoBlue extends LinearOpMode {
 
             Logging.LOG("ALLIANCE", PoseStorage.isRedAlliance ? "RED" : "BLUE");
             Logging.LOG("POSITION", innerPosition ? "INNER" : "OUTER");
+            Logging.LOG("sixBall", sixBall ? "yes" : "no");
 
             Logging.update();
             FtcDashboard.getInstance().sendTelemetryPacket(p);
@@ -187,53 +195,278 @@ public class TestAutoBlue extends LinearOpMode {
 
         Map map = isRed ? mapR : mapB;
 
-        driveBase.localizer.setPose(isRed ? mapR.getStartPosition() : mapB.getStartPosition());
+        driveBase.localizer.setPose(map.getStartPosition());
 
         double Xr = -64.0;
 
-        double Yr = 34.5;
+        double Yr = -34.5;
 
         double rH = driveBase.localizer.getPose().heading.toDouble();
 
         double Xb = -64.0;
 
-        double Yb = -34.5;
+        double Yb = 34.5;
 
         double bH = driveBase.localizer.getPose().heading.toDouble();
 
-        double Dr = Math.sqrt(((72.0 - Yr) * (72.0 - Yr)) + ((72.0 + Xr) * (72.0 + Xr)));
+        double Xr2 = 60.0;
 
-        double Db = Math.sqrt(((-72.0 - Yb) * (-72.0 - Yb)) + ((72.0 + Xb) * (72.0 + Xb)));
+        double Yr2 = -17.5;
+
+        double rH2 = driveBase.localizer.getPose().heading.toDouble();
+
+        double Xb2 = 60.0;
+
+        double Yb2 = 17.5;
+
+        double bH2 = driveBase.localizer.getPose().heading.toDouble();
+
+        double Dr = Math.sqrt(((72.0 + Yr2) * (72.0 + Yr2)) + ((72.0 + Xr2) * (72.0 + Xr2)));
+
+        double Db = Math.sqrt(((-72.0 + Yb2) * (-72.0 + Yb2)) + ((72.0 + Xb2) * (72.0 + Xb2)));
 
         double Hr = Math.atan((72.0 + Xr) / (72.0 - Yr)) + Math.toRadians(90.0) - rH;
 
         double Hb = Math.atan((72.0 + Xb) / (72.0 + Yb)) + Math.toRadians(180.0) - bH;
 
-        double Hr2 = Math.toRadians(180.0);
+        double Hr2 = 180.0;
 
-        double Hb2 = Math.toRadians(180.0);
-
-        double RSr = (-0.032) * Dr * Dr + 11.68 * Dr + 386.0;
-
-        double RSb = (-0.032) * Db * Db + 11.68 * Db + 386.0;
+        double Hb2 = 180.0;
 
         double HAr = 10.0;
 
         double HAb = 10.0;
 
-        double VSr = 1000.0;
+        double VSr = 1050.0;
 
-        double VSb = 1000.0;
+        double VSb = 1050.0;
+
+        double Hr22 = -113.0;
+
+        double Hb22 = 113.0;
+
+        double HAr2 = 0.190808 * Dr + 6.7288;
+
+        double HAb2 = 0.190808 * Dr + 6.7288;
+
+        double VSr2 = 1460.0;
+
+        double VSb2 = 1460.0;
 
         TrajectoryActionBuilder blueTraj = driveBase.actionBuilder(mapB.getStartPosition()) // put initial pose here
-                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
+                .strafeToConstantHeading(new Vector2d(-64.0, 33.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSb);
+                    spinSimple.track(Hb2, 0.0);
+                    spinSimple.hoodAngle(HAb);
+
+                }).waitSeconds(2.75)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(-11.45, 22.0))
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+
+                })
+                .waitSeconds(0.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, 47.0))
+                .waitSeconds(1.0)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    spinSimple.track(0.0, 0.0);
+
+                })
+                .waitSeconds(1.0)
+//                .splineToConstantHeading(new Vector2d(-64.0, 33.5), Math.toRadians(270.0))
+                .strafeToConstantHeading(new Vector2d(-64.0, 33.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSb);
+                    spinSimple.track(Hb2, 0.0);
+                    spinSimple.hoodAngle(HAb);
+
+                }).waitSeconds(2.75)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(3.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .endTrajectory();
+
+
+        TrajectoryActionBuilder redTraj = driveBase.actionBuilder(mapR.getStartPosition()) // put initial pose here
+                .strafeToConstantHeading(new Vector2d(-64.0, -33.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSr);
+                    spinSimple.track(Hr2, 0.0);
+                    spinSimple.hoodAngle(HAr);
+
+                }).waitSeconds(2.75)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(-11.45, -22.0))
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+
+                })
+                .waitSeconds(0.5)
+                .strafeToConstantHeading(new Vector2d(-11.45, -47.0))
+                .waitSeconds(1.0)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    spinSimple.track(0.0, 0.0);
+
+                })
+                .waitSeconds(1.0)
+//                .splineToConstantHeading(new Vector2d(-64.0, -33.5), Math.toRadians(90.0))
+                .strafeToConstantHeading(new Vector2d(-64.0, -33.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSr);
+                    spinSimple.track(Hr2, 0.0);
+                    spinSimple.hoodAngle(HAr);
+
+                }).waitSeconds(2.75)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(3.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .endTrajectory();
+
+
+        TrajectoryActionBuilder blueTraj2 = driveBase.actionBuilder(mapB.getStartPosition()) // put initial pose here
+                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSb2);
+                    spinSimple.track(Hb22, 3.0);
+                    spinSimple.hoodAngle(HAb2);
+
+                }).waitSeconds(4)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(35.95, 24.0))
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+
+                })
+                .waitSeconds(0.5)
+                .strafeToConstantHeading(new Vector2d(35.95, 52.0))
+                .waitSeconds(1.0)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    spinSimple.track(0.0, 0.0);
+
+                })
+                .waitSeconds(1.0)
+                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSb2);
+                    spinSimple.track(Hb22, 3.0);
+                    spinSimple.hoodAngle(HAb2);
+
+                }).waitSeconds(4)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(35.95, 24.0))
+                .endTrajectory();
+
+//        TrajectoryActionBuilder blueTraj2Part2 = driveBase.actionBuilder(mapB.getParkPosition())
+//                .waitSeconds(1.0)
+//                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
 //                .stopAndAdd(() -> {
 //
-//                    outtake.setPower(VSb);
-//                    spinSimple.track(Math.toDegrees(Hb2));
-//                    spinSimple.hoodAngle(HAb);
+//                    outtake.setPower(VSb2);
+//                    spinSimple.track(Hb22, 3.0);
+//                    spinSimple.hoodAngle(HAb2);
 //
-//                }).waitSeconds(1.5)
+//                }).waitSeconds(4)
 //                .stopAndAdd(() -> {
 //
 //                    intake.intake();
@@ -244,177 +477,140 @@ public class TestAutoBlue extends LinearOpMode {
 //
 //                    intake.stopIntake();
 //                    outtake.stopShoot();
-//                    spinSimple.track(0.0);
+//                    spinSimple.track(0.0, 0.0);
 //                    spinSimple.hoodAngle(10.0);
+//                    outtake.close();
 //
 //                })
-                .waitSeconds(2.0)
-                .strafeToConstantHeading(new Vector2d(-11.75, -27.0))
+//                .waitSeconds(0.75)
+//                .strafeToConstantHeading(new Vector2d(35.95, 24.0))
+//                .endTrajectory();
+
+        TrajectoryActionBuilder redTraj2 = driveBase.actionBuilder(mapR.getStartPosition()) // put initial pose here
+                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSr2);
+                    spinSimple.track(Hr22, -3.0);
+                    spinSimple.hoodAngle(HAr2);
+
+                }).waitSeconds(4)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                }).waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(35.95, -24.0))
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+
+                })
+                .waitSeconds(0.5)
+                .strafeToConstantHeading(new Vector2d(35.95, -52.0))
+                .waitSeconds(1.0)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    spinSimple.track(0.0, 0.0);
+
+                })
+                .waitSeconds(1.0)
+                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSr2);
+                    spinSimple.track(Hr22, -3.0);
+                    spinSimple.hoodAngle(HAr2);
+
+                }).waitSeconds(4)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                }).waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(35.95, -24.0))
+                .endTrajectory();
+
+//        TrajectoryActionBuilder redTraj2Part2 = driveBase.actionBuilder(mapR.getParkPosition())
+//                .waitSeconds(1.0)
+//                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
+//                .stopAndAdd(() -> {
+//
+//                    outtake.setPower(VSr2);
+//                    spinSimple.track(Hr22, -3.0);
+//                    spinSimple.hoodAngle(HAr2);
+//
+//                }).waitSeconds(4)
 //                .stopAndAdd(() -> {
 //
 //                    intake.intake();
+//                    outtake.open();
 //
-//                })
-                .waitSeconds(2.0)
-                .strafeToConstantHeading(new Vector2d(-11.75, -50.0))
+//                }).waitSeconds(2.5)
 //                .stopAndAdd(() -> {
 //
 //                    intake.stopIntake();
-//                    spinSimple.track(0.0);
+//                    outtake.stopShoot();
+//                    spinSimple.track(0.0, 0.0);
+//                    spinSimple.hoodAngle(10.0);
+//                    outtake.close();
 //
-//                })
-                .waitSeconds(2.0)
-                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
+//                }).waitSeconds(0.75)
+//                .strafeToConstantHeading(new Vector2d(35.95, -24.0))
+//                .endTrajectory();
+
+        TrajectoryActionBuilder parkTrajBlue = driveBase.actionBuilder(mapB.getParkPosition())
+                .waitSeconds(1.0)
+                        .endTrajectory();
+
+        TrajectoryActionBuilder parkTrajRed = driveBase.actionBuilder(mapR.getParkPosition())
+                .waitSeconds(1.0)
                 .endTrajectory();
-
-
-        TrajectoryActionBuilder redTraj = driveBase.actionBuilder(mapR.getStartPosition()) // put initial pose here
-                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
-                .stopAndAdd(() -> {
-
-                    outtake.setPower(VSr);
-                    spinSimple.track(Math.toDegrees(Hr2));
-                    spinSimple.hoodAngle(HAr);
-
-                }).waitSeconds(1.5)
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-                    outtake.open();
-
-                }).waitSeconds(2.5)
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-                    outtake.stopShoot();
-                    spinSimple.track(0.0);
-                    spinSimple.hoodAngle(10.0);
-
-                })
-                .strafeToConstantHeading(new Vector2d(-11.45, 27.0))
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-
-                })
-                .strafeToConstantHeading(new Vector2d(-11.45, 50.0))
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-
-                })
-                .waitSeconds(2)
-                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
-                .endTrajectory();
-
-
-        TrajectoryActionBuilder blueTraj2 = driveBase.actionBuilder(mapB.getStartPosition()) // put initial pose here
-                .strafeToLinearHeading(new Vector2d(-64.0, -34.5), new Rotation2d(Math.toRadians(0.0), Math.toRadians(270.0)))
-                .stopAndAdd(() -> {
-
-                    outtake.setPower(VSb);
-                    spinSimple.track(Math.toDegrees(Hb2));
-                    spinSimple.hoodAngle(HAb);
-
-                }).waitSeconds(1.5)
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-                    outtake.open();
-
-                }).waitSeconds(2.5)
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-                    outtake.stopShoot();
-                    spinSimple.track(0.0);
-                    spinSimple.hoodAngle(10.0);
-
-                })
-                .strafeToConstantHeading(new Vector2d(-11.45, -27.0))
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-
-                })
-                .strafeToConstantHeading(new Vector2d(-11.45, -50.0))
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-
-                })
-                .waitSeconds(2)
-                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
-                .endTrajectory();
-
-        TrajectoryActionBuilder redTraj2 = driveBase.actionBuilder(mapR.getStartPosition()) // put initial pose here
-                .strafeToLinearHeading(new Vector2d(-64.0, 34.5), new Rotation2d(Math.toRadians(0.0), Math.toRadians(90.0)))
-                .stopAndAdd(() -> {
-
-                    outtake.setPower(VSr);
-                    spinSimple.track(Math.toDegrees(Hr2));
-                    spinSimple.hoodAngle(HAr);
-
-                }).waitSeconds(1.5)
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-                    outtake.open();
-
-                }).waitSeconds(2.5)
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-                    outtake.stopShoot();
-                    spinSimple.track(0.0);
-                    spinSimple.hoodAngle(10.0);
-
-                })
-                .strafeToConstantHeading(new Vector2d(-11.45, 27.0))
-                .stopAndAdd(() -> {
-
-                    intake.intake();
-
-                })
-                .strafeToConstantHeading(new Vector2d(-11.45, 50.0))
-                .stopAndAdd(() -> {
-
-                    intake.stopIntake();
-
-                })
-                .waitSeconds(2)
-                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
-                .endTrajectory();
-
-
 
         waitForStart();
 
         Action traj1 = (isRed ? (innerPosition ? redTraj2.build() : redTraj.build()) : (innerPosition ? blueTraj2.build() : blueTraj.build()));
 
-        Action traj2 = (isRed ? (innerPosition ? redTraj2.build() : redTraj.build()) : (innerPosition ? blueTraj2.build() : blueTraj.build()));
-
-        Action intek = new Action() {
-            @Override
-            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                intake.intake();
-                return false;
-            }
-        };
+//        Action traj2 = (isRed ? redTraj2Part2.build() : blueTraj2Part2.build());
+//
+//        Action park = (isRed ? parkTrajRed.build() : parkTrajBlue.build());
 
         Actions.runBlocking(
                 new SequentialAction(
                         traj1
+//                        (sixBall ? traj2 : park)
                 )
         );
 
 
-        while (opModeIsActive() && !isStopRequested() && traj1.run(p)) {
+        while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
             driveBase.update(p);
-            PoseStorage.currentPose = driveBase.localizer.getPose();
+            PoseStorage.currentPose = new Pose2d(driveBase.localizer.getPose().position.x, - driveBase.localizer.getPose().position.y, driveBase.localizer.getPose().heading.toDouble());
 
-            Logging.LOG("Red distance (IN)", Dr);
+//            PoseStorage.currentPose = driveBase.localizer.getPose();
+
             Logging.LOG("X coordinate (IN)", driveBase.localizer.getPose().position.x);
             Logging.LOG("Y coordinate (IN)", driveBase.localizer.getPose().position.y);
             Logging.LOG("Heading angle (DEGREES)", Math.toDegrees(driveBase.localizer.getPose().heading.toDouble()));

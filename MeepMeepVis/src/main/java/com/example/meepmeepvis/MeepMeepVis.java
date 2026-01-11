@@ -145,25 +145,23 @@ public class MeepMeepVis {
 
         Action blueTraj2 = bot2.getDrive().actionBuilder(mapB2.getStartPosition())
                 .waitSeconds(5)
-                .strafeToLinearHeading(new Vector2d(-64.0, -34.5), new Rotation2d(Math.toRadians(0.0), Math.toRadians(270.0)))
+                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
+                .strafeToLinearHeading(new Vector2d(35.95, -27.0), new Rotation2d(Math.toRadians(0.0), Math.toRadians(270.0)))
                 .waitSeconds(2.5)
-                .strafeToConstantHeading(new Vector2d(-11.45, -27.0))
+                .strafeToConstantHeading(new Vector2d(35.95, -50.0))
                 .waitSeconds(2.5)
-                .strafeToConstantHeading(new Vector2d(-11.45, -50.0))
-                .waitSeconds(2.5)
-                .strafeToConstantHeading(new Vector2d(-64.0, -34.5))
+                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
                 .build();
 
 
         Action redTraj2 = bot2.getDrive().actionBuilder(mapR2.getStartPosition())
                 .waitSeconds(5)
-                .strafeToLinearHeading(new Vector2d(-64.0, 34.5), new Rotation2d(Math.toRadians(0.0), Math.toRadians(90.0)))
+                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
+                .strafeToLinearHeading(new Vector2d(35.95, 27.0), new Rotation2d(Math.toRadians(0.0), Math.toRadians(90.0)))
                 .waitSeconds(2.5)
-                .strafeToConstantHeading(new Vector2d(-11.45, 27.0))
+                .strafeToConstantHeading(new Vector2d(35.95, 50.0))
                 .waitSeconds(2.5)
-                .strafeToConstantHeading(new Vector2d(-11.45, 50.0))
-                .waitSeconds(2.5)
-                .strafeToConstantHeading(new Vector2d(-64.0, 34.5))
+                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
                 .build();
 
         bot2.runAction(!isRed ? redTraj2 : blueTraj2);
