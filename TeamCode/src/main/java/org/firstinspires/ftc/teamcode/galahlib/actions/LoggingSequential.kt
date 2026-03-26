@@ -13,7 +13,7 @@ class LoggingSequential(val baseName: String, val initialActions: List<LoggableA
 
     constructor(name: String, vararg actions: LoggableAction) : this(name, actions.asList())
 
-    override tailrec fun run(p: TelemetryPacket): Boolean {
+    tailrec fun run(p: TelemetryPacket): Boolean {
         if (actions.isEmpty()) {
             return false
         }
@@ -30,7 +30,7 @@ class LoggingSequential(val baseName: String, val initialActions: List<LoggableA
         }
     }
 
-    override fun preview(fieldOverlay: Canvas) {
+    fun preview(fieldOverlay: Canvas) {
         for (a in initialActions) {
             a.preview(fieldOverlay)
         }

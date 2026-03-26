@@ -116,6 +116,17 @@ public class TeleOpHarry extends LinearOpMode {
             module.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
         }
 
+//        LoggableAction finishingAction = new Loggable("INIT", new ParallelAction(
+//                new Action() {
+//                    @Override
+//                    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//                        spinSimple.track(0.0, 0.0);
+//                        return false;
+//                    }
+//                }
+//
+//        ));
+
         LoggableAction finishingAction = new Loggable("INIT", new ParallelAction(
                 new Action() {
                     @Override
@@ -124,7 +135,6 @@ public class TeleOpHarry extends LinearOpMode {
                         return false;
                     }
                 }
-
         ));
 
 
