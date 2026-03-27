@@ -156,6 +156,7 @@ public class TestAutoBlue extends LinearOpMode {
         boolean innerPosition = false;
         boolean isRed = false;
         boolean sixBall = false;
+        boolean runAuto = true;
         while (!isStarted()) {
             p = new TelemetryPacket();
             driveBase.update(p);
@@ -163,8 +164,8 @@ public class TestAutoBlue extends LinearOpMode {
             if (gamepad1.a) innerPosition = true;
             else if (gamepad1.y) innerPosition = false;
 
-            if (gamepad2.a) sixBall = true;
-            else if (gamepad2.y) sixBall = false;
+            if (gamepad1.dpad_up) sixBall = true;
+            else if (gamepad1.dpad_down) sixBall = false;
 
             if (gamepad1.b) {
                 PoseStorage.isRedAlliance = true;
@@ -172,8 +173,10 @@ public class TestAutoBlue extends LinearOpMode {
             } else if (gamepad1.x) {
                 PoseStorage.isRedAlliance = false;
                 isRed = false;
-
             }
+
+            if (gamepad1.dpad_left) runAuto = true;
+            else if (gamepad1.dpad_right) runAuto = false;
 
             Logging.LOG("ALLIANCE", PoseStorage.isRedAlliance ? "RED" : "BLUE");
             Logging.LOG("POSITION", innerPosition ? "INNER" : "OUTER");
@@ -321,7 +324,6 @@ public class TestAutoBlue extends LinearOpMode {
                 })
                 .endTrajectory();
 
-
         TrajectoryActionBuilder redTraj = driveBase.actionBuilder(mapR.getStartPosition()) // put initial pose here
                 .strafeToConstantHeading(new Vector2d(-64.0, -33.5))
                 .stopAndAdd(() -> {
@@ -388,7 +390,6 @@ public class TestAutoBlue extends LinearOpMode {
 
                 })
                 .endTrajectory();
-
 
         TrajectoryActionBuilder blueTraj2 = driveBase.actionBuilder(mapB.getStartPosition()) // put initial pose here
                 .strafeToConstantHeading(new Vector2d(60.0, 17.5))
@@ -458,35 +459,6 @@ public class TestAutoBlue extends LinearOpMode {
                 .strafeToConstantHeading(new Vector2d(35.95, 24.0))
                 .endTrajectory();
 
-//        TrajectoryActionBuilder blueTraj2Part2 = driveBase.actionBuilder(mapB.getParkPosition())
-//                .waitSeconds(1.0)
-//                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
-//                .stopAndAdd(() -> {
-//
-//                    outtake.setPower(VSb2);
-//                    spinSimple.track(Hb22, 3.0);
-//                    spinSimple.hoodAngle(HAb2);
-//
-//                }).waitSeconds(4)
-//                .stopAndAdd(() -> {
-//
-//                    intake.intake();
-//                    outtake.open();
-//
-//                }).waitSeconds(2.5)
-//                .stopAndAdd(() -> {
-//
-//                    intake.stopIntake();
-//                    outtake.stopShoot();
-//                    spinSimple.track(0.0, 0.0);
-//                    spinSimple.hoodAngle(10.0);
-//                    outtake.close();
-//
-//                })
-//                .waitSeconds(0.75)
-//                .strafeToConstantHeading(new Vector2d(35.95, 24.0))
-//                .endTrajectory();
-
         TrajectoryActionBuilder redTraj2 = driveBase.actionBuilder(mapR.getStartPosition()) // put initial pose here
                 .strafeToConstantHeading(new Vector2d(60.0, -17.5))
                 .stopAndAdd(() -> {
@@ -553,39 +525,72 @@ public class TestAutoBlue extends LinearOpMode {
                 .strafeToConstantHeading(new Vector2d(35.95, -24.0))
                 .endTrajectory();
 
-//        TrajectoryActionBuilder redTraj2Part2 = driveBase.actionBuilder(mapR.getParkPosition())
-//                .waitSeconds(1.0)
-//                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
-//                .stopAndAdd(() -> {
-//
-//                    outtake.setPower(VSr2);
-//                    spinSimple.track(Hr22, -3.0);
-//                    spinSimple.hoodAngle(HAr2);
-//
-//                }).waitSeconds(4)
-//                .stopAndAdd(() -> {
-//
-//                    intake.intake();
-//                    outtake.open();
-//
-//                }).waitSeconds(2.5)
-//                .stopAndAdd(() -> {
-//
-//                    intake.stopIntake();
-//                    outtake.stopShoot();
-//                    spinSimple.track(0.0, 0.0);
-//                    spinSimple.hoodAngle(10.0);
-//                    outtake.close();
-//
-//                }).waitSeconds(0.75)
-//                .strafeToConstantHeading(new Vector2d(35.95, -24.0))
-//                .endTrajectory();
+        TrajectoryActionBuilder blueTraj2Part2 = driveBase.actionBuilder(mapB.getParkPosition())
+                .waitSeconds(1.0)
+                .strafeToConstantHeading(new Vector2d(60.0, 17.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSb2);
+                    spinSimple.track(Hb22, 3.0);
+                    spinSimple.hoodAngle(HAb2);
+
+                }).waitSeconds(4)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                })
+                .waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(35.95, 24.0))
+                .endTrajectory();
+
+        TrajectoryActionBuilder redTraj2Part2 = driveBase.actionBuilder(mapR.getParkPosition())
+                .waitSeconds(1.0)
+                .strafeToConstantHeading(new Vector2d(60.0, -17.5))
+                .stopAndAdd(() -> {
+
+                    outtake.setPower(VSr2);
+                    spinSimple.track(Hr22, -3.0);
+                    spinSimple.hoodAngle(HAr2);
+
+                }).waitSeconds(4)
+                .stopAndAdd(() -> {
+
+                    intake.intake();
+                    outtake.open();
+
+                }).waitSeconds(2.5)
+                .stopAndAdd(() -> {
+
+                    intake.stopIntake();
+                    outtake.stopShoot();
+                    spinSimple.track(0.0, 0.0);
+                    spinSimple.hoodAngle(10.0);
+                    outtake.close();
+
+                }).waitSeconds(0.75)
+                .strafeToConstantHeading(new Vector2d(35.95, -24.0))
+                .endTrajectory();
 
         TrajectoryActionBuilder parkTrajBlue = driveBase.actionBuilder(mapB.getParkPosition())
                 .waitSeconds(1.0)
-                        .endTrajectory();
+                .endTrajectory();
 
         TrajectoryActionBuilder parkTrajRed = driveBase.actionBuilder(mapR.getParkPosition())
+                .waitSeconds(1.0)
+                .endTrajectory();
+
+        TrajectoryActionBuilder setEndPoseTraj = driveBase.actionBuilder(map.getStartPosition())
                 .waitSeconds(1.0)
                 .endTrajectory();
 
@@ -593,17 +598,24 @@ public class TestAutoBlue extends LinearOpMode {
 
         Action traj1 = (isRed ? (innerPosition ? redTraj2.build() : redTraj.build()) : (innerPosition ? blueTraj2.build() : blueTraj.build()));
 
-//        Action traj2 = (isRed ? redTraj2Part2.build() : blueTraj2Part2.build());
-//
-//        Action park = (isRed ? parkTrajRed.build() : parkTrajBlue.build());
+        Action traj2 = (isRed ? redTraj2Part2.build() : blueTraj2Part2.build());
 
-        Actions.runBlocking(
-                new SequentialAction(
-                        traj1
-//                        (sixBall ? traj2 : park)
-                )
+        Action park = (isRed ? parkTrajRed.build() : parkTrajBlue.build());
+
+        Action setEndPose = setEndPoseTraj.build();
+
+        SequentialAction yesAuto = new SequentialAction(
+                traj1,
+                (sixBall ? traj2 : park)
         );
 
+        SequentialAction noAuto = new SequentialAction(
+                setEndPose
+        );
+
+        Actions.runBlocking(
+                (runAuto ? yesAuto : noAuto)
+        );
 
         while (opModeIsActive() && !isStopRequested()) {
             p = new TelemetryPacket();
@@ -618,5 +630,12 @@ public class TestAutoBlue extends LinearOpMode {
 
             Logging.update();
         }
+
+        if (isStopRequested()) {
+            p = new TelemetryPacket();
+            driveBase.update(p);
+            PoseStorage.currentPose = new Pose2d(driveBase.localizer.getPose().position.x, - driveBase.localizer.getPose().position.y, driveBase.localizer.getPose().heading.toDouble());
+        }
+
     }
 }
