@@ -241,37 +241,37 @@ public class TeleOpHarry extends LinearOpMode {
 //            }
 
 
-            if (gamepad2.b && PoseStorage.isRedAlliance) {
+            if (gamepad1.b && PoseStorage.isRedAlliance) {
                 outtake.setPower(VSr);
                 Logging.LOG("b");
-            } else if (gamepad2.b && !PoseStorage.isRedAlliance) {
+            } else if (gamepad1.b && !PoseStorage.isRedAlliance) {
                 outtake.setPower(VSb);
                 Logging.LOG("b");
             }
 
-            if (gamepad2.bWasReleased()) {
+            if (gamepad1.bWasReleased()) {
                 outtake.stopShoot();
             }
 
-            if (gamepad2.right_bumper && PoseStorage.isRedAlliance) {
-                if (gamepad2.dpadLeftWasPressed()) {
+            if (gamepad1.right_bumper && PoseStorage.isRedAlliance) {
+                if (gamepad1.dpadLeftWasPressed()) {
                     offset += 2.0;
-                } else if (gamepad2.dpadRightWasPressed()) {
+                } else if (gamepad1.dpadRightWasPressed()) {
                     offset -= 2.0;
                 }
                 spinSimple.track(Math.toDegrees(Hr2), offset);
                 spinSimple.hoodAngle(HAr);
-            } else if (gamepad2.right_bumper && !PoseStorage.isRedAlliance) {
-                if (gamepad2.dpadLeftWasPressed()) {
+            } else if (gamepad1.right_bumper && !PoseStorage.isRedAlliance) {
+                if (gamepad1.dpadLeftWasPressed()) {
                     offset += 2.0;
-                } else if (gamepad2.dpadRightWasPressed()) {
+                } else if (gamepad1.dpadRightWasPressed()) {
                     offset -= 2.0;
                 }
                 spinSimple.track(Math.toDegrees(Hb2), offset);
                 spinSimple.hoodAngle(HAb);
             }
 
-            if (gamepad2.rightBumperWasReleased()) {
+            if (gamepad1.rightBumperWasReleased()) {
                 spinSimple.track(0.0, 0.0);
                 spinSimple.hoodAngle(10.0);
                 offset = 0.0;
@@ -330,23 +330,23 @@ public class TeleOpHarry extends LinearOpMode {
             driveBase.update(p);
 
 
-            if (gamepad2.x) {
+            if (gamepad1.x) {
                 intake.outake();
                 outtake.runServoBackwards();
                 Logging.LOG("x");
             }
 
-            if (gamepad2.xWasReleased()) {
+            if (gamepad1.xWasReleased()) {
                 intake.stopIntake();
                 outtake.stopServo();
             }
 
-            if (gamepad2.y) {
+            if (gamepad1.y) {
                 outtake.runServoBackwards();
                 Logging.LOG("y");
             }
 
-            if (gamepad2.yWasReleased()) {
+            if (gamepad1.yWasReleased()) {
                 outtake.stopServo();
             }
 
@@ -360,12 +360,12 @@ public class TeleOpHarry extends LinearOpMode {
             }
 
 
-            if (gamepad2.left_bumper) {
+            if (gamepad1.left_bumper) {
                 outtake.open();
                 Logging.LOG("left_bumper");
             }
 
-            if (gamepad2.leftBumperWasReleased()) {
+            if (gamepad1.leftBumperWasReleased()) {
                 outtake.close();
             }
 
