@@ -42,8 +42,6 @@ import org.firstinspires.ftc.teamcode.subsystems.Intake;
 import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 import org.firstinspires.ftc.teamcode.subsystems.Outtake;
 import org.firstinspires.ftc.teamcode.subsystems.TurretSimple;
-//import org.firstinspires.ftc.teamcode.subsystems.Turret;
-//import org.firstinspires.ftc.teamcode.subsystems.Limelight;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
